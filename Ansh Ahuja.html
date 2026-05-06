@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Vibe & Resume</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            primary: '#0D9488', // Teal
+                            secondary: '#FF715B', // Coral
+                            bg: '#FAF9F6', // Off-white
+                            card: 'rgba(255, 255, 255, 0.7)', // Translucent for glassmorphism
+                            dark: '#18181B',
+                            muted: '#71717A'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FAF9F6;
+            /* UI/UX Dot Grid Pattern */
+            background-image: radial-gradient(#D4D4D8 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #18181B;
+            cursor: crosshair;
+        }
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4D4D8; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0D9488; 
+        }
+        
+        /* Glassmorphism & UI Card styling */
+        .bento-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.1s ease-out;
+            box-shadow: 0 4px 24px -6px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        .bento-card:hover {
+            box-shadow: 0 12px 32px -4px rgba(13, 148, 136, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+            border-color: rgba(13, 148, 136, 0.3);
+        }
+
+        /* Entrance Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        /* Floating Emojis */
+        @keyframes float-emoji {
+            0% { transform: translateY(110vh) rotate(-10deg) scale(0.8); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-20vh) rotate(20deg) scale(1.1); opacity: 0; }
+        }
+        .emoji-float {
+            position: fixed;
+            bottom: -10%;
+            animation: float-emoji linear infinite;
+            opacity: 0;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05)) blur(0.5px);
+        }
+
+        /* --- NEW COOL UI/UX ADDITIONS --- */
+
+        /* Equalizer Animation for Music Widget */
+        @keyframes eq {
+            0% { height: 4px; }
+            50% { height: 14px; }
+            100% { height: 4px; }
+        }
+        .eq-bar {
+            width: 3px;
+            background-color: currentColor;
+            border-radius: 2px;
+            animation: eq 1.2s ease-in-out infinite;
+        }
+        .eq-bar:nth-child(2) { animation-delay: -0.4s; }
+        .eq-bar:nth-child(3) { animation-delay: -0.8s; }
+
+        /* Easter Egg Reveal */
+        .reveal-card { cursor: crosshair; }
+        .reveal-content { 
+            filter: blur(12px); 
+            opacity: 0.5;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .reveal-overlay { 
+            transition: opacity 0.3s ease; 
+        }
+        .reveal-card:hover .reveal-content, .reveal-card:active .reveal-content { 
+            filter: blur(0px); 
+            opacity: 1;
+        }
+        .reveal-card:hover .reveal-overlay, .reveal-card:active .reveal-overlay { 
+            opacity: 0; 
+            pointer-events: none;
+        }
+
+        /* Infinite Marquee */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 25s linear infinite;
+        }
+        .marquee-container {
+            overflow: hidden;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+
+        /* Magnetic Button Transition */
+        .magnetic {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* 1. Shimmer Effect for Hero Text */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .text-shimmer {
+            background: linear-gradient(
+                to right,
+                #0D9488 20%,
+                #14B8A6 40%,
+                #5EEAD4 60%,
+                #0D9488 80%
+            );
+            background-size: 200% auto;
+            color: #000;
+            background-clip: text;
+            text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s linear infinite;
+        }
+
+        /* 2. Custom Cursor Hide Default */
+        @media (hover: hover) and (pointer: fine) {
+            body { cursor: none; }
+            a, button, .bento-card { cursor: none !important; }
+        }
+
+        /* Custom Cursor Elements */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #FF715B;
+        }
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(13, 148, 136, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        .cursor-outline.hover-state {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 113, 91, 0.1);
+            border-color: #FF715B;
+        }
+
+        /* 3. Noise Overlay */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+        }
+
+        /* 4. Linear-Style Card Spotlight Glow */
+        .bento-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(
+                600px circle at var(--mouse-x, 0) var(--mouse-y, 0),
+                rgba(255, 113, 91, 0.12),
+                transparent 40%
+            );
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+        /* Ensure card content stays above the glow */
+        .bento-card > * {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* 5. Hacker Decrypt Text */
+        .hacker-text {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen selection:bg-brand-secondary selection:text-white p-4 md:p-8">
+
+    <!-- 3. SVG Noise Filter (Premium UI texture) -->
+    <svg class="noise-overlay text-transparent w-full h-full">
+        <filter id="noiseFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+    </svg>
+
+    <!-- 2. Custom Cursor DOM -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Glowing Background Blob (Psychological Anchoring) -->
+    <div class="fixed top-0 left-1/4 w-96 h-96 bg-brand-primary/15 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none z-0 animate-pulse-slow"></div>
+    <div class="fixed bottom-0 right-1/4 w-96 h-96 bg-brand-secondary/10 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none z-0"></div>
+
+    <!-- Floating Emojis Container -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="emoji-float text-3xl" style="left: 10%; animation-duration: 18s; animation-delay: 0s;">✨</div>
+        <div class="emoji-float text-4xl" style="left: 25%; animation-duration: 25s; animation-delay: 5s;">🚀</div>
+        <div class="emoji-float text-5xl opacity-20" style="left: 45%; animation-duration: 22s; animation-delay: 2s; filter: blur(2px);">🧠</div>
+        <div class="emoji-float text-3xl" style="left: 70%; animation-duration: 28s; animation-delay: 8s;">📈</div>
+        <div class="emoji-float text-4xl" style="left: 85%; animation-duration: 20s; animation-delay: 1s;">🔥</div>
+        <div class="emoji-float text-3xl opacity-30" style="left: 15%; animation-duration: 24s; animation-delay: 12s; filter: blur(1px);">💡</div>
+        <div class="emoji-float text-4xl" style="left: 60%; animation-duration: 26s; animation-delay: 14s;">🎯</div>
+        <div class="emoji-float text-3xl" style="left: 80%; animation-duration: 19s; animation-delay: 6s;">✨</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto relative z-10">
+        
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 animate-fade-in" style="animation-delay: 0ms;">
+            <div>
+                <!-- UX Status Indicator -->
+                <div class="flex flex-wrap items-center gap-3 mb-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-dark">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-primary"></span>
+                        </span>
+                        Available for Internships
+                    </div>
+                    <!-- Live Time Widget -->
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-muted">
+                        <i class="ph-fill ph-clock text-brand-primary"></i> <span id="live-time">Loading...</span>
+                    </div>
+                    <!-- Now Playing Widget -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#1DB954]/10 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide border border-[#1DB954]/20 shadow-sm text-[#1DB954]">
+                        <i class="ph-fill ph-spotify-logo text-sm"></i>
+                        <span>On Repeat: Lo-Fi Focus</span>
+                        <div class="flex items-end gap-[2px] h-[14px] ml-1">
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-bold leading-none tracking-tight text-brand-dark drop-shadow-sm">
+                    Hey, I'm <br>
+                    <span class="text-shimmer hacker-text" data-value="Ansh Ahuja">
+                        Ansh Ahuja
+                    </span>
+                </h1>
+                <p class="mt-4 text-xl text-brand-muted font-medium">Marketing Analytics ✦ Community Builder ✦ UI/UX Strategy</p>
+            </div>
+            <div class="flex gap-4 z-20 relative">
+                <button id="copy-email-btn" class="magnetic px-6 py-3 bg-brand-dark text-white rounded-2xl font-bold hover:bg-brand-primary active:scale-95 flex items-center gap-2 shadow-lg hover:shadow-brand-primary/25 cursor-none transition-colors">
+                    <i class="ph ph-envelope-simple text-xl" id="email-icon"></i> <span id="email-text">Copy Email</span>
+                </button>
+                <a href="[Your-LinkedIn-URL]" class="magnetic p-3 bg-white/80 backdrop-blur-sm border border-zinc-200 rounded-2xl hover:border-brand-primary hover:text-brand-primary active:scale-95 text-brand-dark shadow-sm">
+                    <i class="ph ph-linkedin-logo text-xl"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- INFINITE TICKER TAPE -->
+        <div class="w-full marquee-container py-4 mb-8 border-y border-zinc-200/50 bg-white/30 backdrop-blur-sm animate-fade-in" style="animation-delay: 50ms;">
+            <div class="animate-marquee font-medium text-brand-primary/80 tracking-widest text-sm uppercase">
+                <span>✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
+                <span>✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
+            </div>
+        </div>
+
+        <!-- BENTO GRID -->
+        <div id="bento-container" class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+
+            <!-- THE VIBE (About) -->
+            <div class="bento-card col-span-1 md:col-span-2 row-span-2 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="animation-delay: 100ms;">
+                <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:rotate-12 transition-all duration-500">
+                    <i class="ph-fill ph-sparkle text-8xl text-brand-secondary"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                    <i class="ph-fill ph-user-circle text-brand-primary"></i> The Vibe
+                </h2>
+                <p class="text-brand-muted text-lg leading-relaxed relative z-10">
+                    Not your average corporate suit. I'm a Gen Z marketer who speaks fluent internet and designs campaigns optimized for <strong>high emotional ROI and low cognitive load.</strong> 
+                    <br><br>
+                    I treat every marketing touchpoint like a user interface—it needs to be intuitive, gorgeous, and frictionless. Think golden retriever energy, but with a color-coded Notion workspace and a Figma board—I bring weaponized extrovertness balanced with absolute responsibility. I don't just follow trends; I reverse-engineer the psychology and UX behind why they work.
+                    <br><br>
+                    Looking to bring fresh eyes, an authentic voice, and a true "pana" mentality to your marketing team. Let's make some noise.
+                </p>
+            </div>
+
+            <!-- THE SUPERPOWER (ADHD) -->
+            <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-8 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
+                <!-- Subtle internal gradient for UX depth -->
+                <div class="absolute inset-0 bg-gradient-to-br from-teal-50/40 via-transparent to-orange-50/40 z-0"></div>
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                        <i class="ph-fill ph-lightning text-brand-secondary drop-shadow-sm"></i> The Secret Weapon
+                    </h2>
+                    <h3 class="text-xl font-semibold text-brand-primary mb-2">Neurodivergent & Proud</h3>
+                    <p class="text-brand-muted">
+                        Yeah, I have ADHD. In marketing, that's a psychological cheat code. It means I possess <strong>hyper-focus</strong> for creative ideation, a brain wired for <strong>rapid pattern recognition</strong> in analytics, and the ability to connect seemingly unrelated dots. Out-of-the-box thinking? The box is a dot to me.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SKILLS -->
+            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 300ms;">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                    <i class="ph-fill ph-toolbox text-brand-primary"></i> Toolkit
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">UI/UX Design 🎨</span>
+                    <span class="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-sm text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20 transition-colors cursor-default">Figma & Prototyping</span>
+                    <span class="px-3 py-1 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 rounded-xl text-sm font-medium shadow-sm hover:bg-brand-secondary/20 transition-colors cursor-default">Desi Rizz ✨</span>
+                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Marketing Analytics 📈</span>
+                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Social Media Strategy</span>
+                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">User Journey Mapping</span>
+                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Copywriting</span>
+                </div>
+            </div>
+
+            <!-- EXPERIENCE / RECEIPTS -->
+            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 400ms;">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                    <i class="ph-fill ph-receipt text-brand-secondary"></i> The Receipts
+                </h2>
+                <ul class="space-y-4">
+                    <li class="border-l-2 border-brand-secondary pl-4 relative">
+                        <div class="absolute w-2 h-2 bg-brand-secondary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#FF715B]"></div>
+                        <h4 class="font-bold text-brand-dark leading-tight">Cultural Rep & Hypeperson</h4>
+                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023 - 2024</p>
+                        <p class="text-sm text-zinc-600 mt-1">Weaponized <strong>Desi Rizz</strong> to pack events. Blended cultural nuances with Gen Z marketing to double memberships.</p>
+                    </li>
+                    <li class="border-l-2 border-brand-primary pl-4 relative">
+                        <div class="absolute w-2 h-2 bg-brand-primary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#0D9488]"></div>
+                        <h4 class="font-bold text-brand-dark leading-tight">Social Media Manager <span class="text-brand-primary text-sm font-medium"><br>@ Jagdish Silk Store</span></h4>
+                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">Freelance</p>
+                        <p class="text-sm text-zinc-600 mt-1">Drove hyper-localized campaigns targeting real human behavior, optimizing the digital storefront UX for genuine off-season foot traffic.</p>
+                    </li>
+                    <li class="border-l-2 border-zinc-300 pl-4 relative">
+                        <div class="absolute w-2 h-2 bg-zinc-300 rounded-full -left-[5px] top-1.5"></div>
+                        <h4 class="font-bold text-brand-dark leading-tight">Data & UX Growth Project <span class="text-brand-muted text-sm font-medium"><br>@ University</span></h4>
+                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023</p>
+                        <p class="text-sm text-zinc-600 mt-1">Mapped user journeys and combined analytics with behavioral psychology to design a frictionless Gen Z retention strategy.</p>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- CURRENT HYPERFOCUS (New Card) -->
+            <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 450ms;">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
+                    <i class="ph-fill ph-crosshair text-brand-primary"></i> Current Hyperfocus
+                </h2>
+                <p class="text-brand-muted text-sm leading-relaxed">
+                    Channeling the ADHD superpower into my latest obsessions: <strong class="text-brand-primary">Behavioral Economics</strong>, dissecting Brutalist UI web trends, and perfecting the ultimate matcha latte to fuel my analytics dashboards.
+                </p>
+            </div>
+
+            <!-- DAILY STACK (New Card) -->
+            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 480ms;">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
+                    <i class="ph-fill ph-stack text-brand-secondary"></i> Daily Stack
+                </h2>
+                <div class="flex items-center gap-4 text-2xl text-zinc-500">
+                    <i class="ph-fill ph-figma-logo hover:text-[#F24E1E] transition-colors cursor-none" title="Figma"></i>
+                    <i class="ph-fill ph-notion-logo hover:text-black transition-colors cursor-none" title="Notion"></i>
+                    <i class="ph-fill ph-chart-line-up hover:text-brand-primary transition-colors cursor-none" title="Analytics"></i>
+                </div>
+            </div>
+
+            <!-- EASTER EGG REVEAL CARD -->
+            <div class="bento-card reveal-card col-span-1 md:col-span-1 rounded-[2rem] p-6 relative flex items-center justify-center overflow-hidden animate-fade-in" style="animation-delay: 490ms; background: repeating-linear-gradient(45deg, #FAF9F6, #FAF9F6 10px, #F4F4F5 10px, #F4F4F5 20px);">
+                <!-- Overlay message -->
+                <div class="reveal-overlay absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm z-10">
+                    <i class="ph-fill ph-eye-slash text-3xl text-brand-secondary mb-2"></i>
+                    <p class="font-bold text-sm text-brand-dark tracking-wide uppercase">Hover to reveal</p>
+                    <p class="text-[10px] text-brand-muted font-medium">My biggest red flag 🚩</p>
+                </div>
+                <!-- Hidden Content -->
+                <div class="reveal-content text-center z-0">
+                    <p class="text-sm font-bold text-brand-dark">I will fundamentally judge a brand based on their kerning and font pairings.</p>
+                    <p class="text-xs text-brand-secondary mt-2 font-medium">(And yes, I use Notion for literally everything).</p>
+                </div>
+            </div>
+
+            <!-- THE PHILOSOPHY (Langhanam & Psych) -->
+            <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%); animation-delay: 500ms;">
+                <div class="absolute -right-10 -top-10 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                    <i class="ph-fill ph-brain text-[200px] text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-white">
+                    <i class="ph-fill ph-lightbulb text-brand-secondary"></i> The Psychology of "Langhanam"
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                    <div class="md:col-span-2">
+                        <p class="text-teal-50 text-lg leading-relaxed">
+                            My worldview—and my marketing strategy—is deeply rooted in human psychology and the ancient concept of <strong class="text-brand-primary bg-white px-2 py-0.5 rounded shadow-sm">Langhanam</strong> (the practice of lightening or mental fasting). 
+                            <br><br>
+                            In an era of chronic overstimulation and decision fatigue, brands fail when they add to the noise. I believe in stripping away the clutter to find the core psychological truth. By reducing cognitive load, we create "breathing room" for a brand to become emotionally resonant. <em class="text-brand-secondary block mt-2 font-medium">Fun fact: This very CV is designed using Langhanam—stripping away corporate fluff to leave only high-signal data.</em>
+                        </p>
+                    </div>
+                    <div class="flex flex-col justify-center space-y-4 border-l md:border-l-2 border-teal-700 md:pl-6 pt-4 md:pt-0">
+                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                            Reduced Cognitive Load
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                            The Halo Effect Strategy
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                            High Emotional ROI
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FUN FACT / HOOK -->
+            <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between transition-transform animate-fade-in" style="animation-delay: 600ms;">
+                <div class="mb-4 md:mb-0">
+                    <h2 class="text-3xl font-bold mb-2 text-brand-dark">Ready to break the internet together?</h2>
+                    <p class="font-medium text-brand-muted">Looking for an internship where I can actually make an impact (and maybe some memes).</p>
+                </div>
+                <a href="https://wa.me/917814288217?text=Yo!%20Saw%20your%20CV.%20The%20psychology%20vibe%20is%20immaculate%20and%20the%20desi%20rizz%20is%20undeniable.%20Let's%20chat%20about%20breaking%20the%20internet%20together.%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" class="magnetic px-8 py-4 bg-brand-secondary text-white rounded-2xl font-bold hover:bg-[#ff5a40] active:scale-95 flex items-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,113,91,0.5)] z-20 relative">
+                    Let's Chat <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="mt-12 text-center text-zinc-400 text-sm pb-8 animate-fade-in" style="animation-delay: 700ms;">
+            <p>Designed with intentionality & AI ✨. © 2026 Ansh Ahuja. All vibes reserved.</p>
+        </footer>
+
+    </main>
+
+    <!-- Custom Cursor & Interactions Script -->
+    <script>
+        // Only run cursor script on non-touch devices
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            const cursorDot = document.querySelector('.cursor-dot');
+            const cursorOutline = document.querySelector('.cursor-outline');
+            
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
+                
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+                
+                // Add a slight delay to the outline for that smooth UI/UX feel
+                cursorOutline.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 500, fill: "forwards" });
+            });
+
+            // Add hover state to interactive elements
+            const interactables = document.querySelectorAll('a, button, .bento-card, .px-3.py-1, i[title]');
+            interactables.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    cursorOutline.classList.add('hover-state');
+                });
+                el.addEventListener('mouseleave', () => {
+                    cursorOutline.classList.remove('hover-state');
+                });
+            });
+
+            // Magnetic Buttons Logic
+            const magnetics = document.querySelectorAll('.magnetic');
+            magnetics.forEach((btn) => {
+                btn.addEventListener('mousemove', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    
+                    // Pull button slightly towards cursor
+                    btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px) scale(1.02)`;
+                });
+                
+                btn.addEventListener('mouseleave', () => {
+                    // Reset position
+                    btn.style.transform = `translate(0px, 0px) scale(1)`;
+                });
+            });
+
+            // 1. 3D Tilt Effect on Bento Cards
+            const bentoCards = document.querySelectorAll('.bento-card');
+            const bentoContainer = document.getElementById('bento-container');
+
+            // Handle the spotlight glow effect
+            if(bentoContainer) {
+                bentoContainer.addEventListener('mousemove', (e) => {
+                    bentoCards.forEach(card => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        card.style.setProperty('--mouse-x', `${x}px`);
+                        card.style.setProperty('--mouse-y', `${y}px`);
+                    });
+                });
+            }
+
+            bentoCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Calculate rotation (max 4 degrees for subtlety)
+                    const rotateX = ((y - centerY) / centerY) * -4;
+                    const rotateY = ((x - centerX) / centerX) * 4;
+                    
+                    card.style.transform = `perspective(1000px) scale3d(1.02, 1.02, 1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)`;
+                });
+            });
+
+            // 4. Hacker Text Decrypt Effect
+            const hackerText = document.querySelector('.hacker-text');
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let decryptInterval = null;
+
+            if (hackerText) {
+                hackerText.addEventListener('mouseover', event => {
+                    let iteration = 0;
+                    clearInterval(decryptInterval);
+                    
+                    decryptInterval = setInterval(() => {
+                        event.target.innerText = event.target.innerText
+                            .split("")
+                            .map((letter, index) => {
+                                if(index < iteration) {
+                                    return event.target.dataset.value[index];
+                                }
+                                return letters[Math.floor(Math.random() * 26)];
+                            })
+                            .join("");
+                        
+                        if(iteration >= event.target.dataset.value.length){ 
+                            clearInterval(decryptInterval);
+                        }
+                        iteration += 1 / 3;
+                    }, 30);
+                });
+            }
+        }
+
+        // 2. Live Time Widget (IST)
+        function updateLiveTime() {
+            const timeElement = document.getElementById('live-time');
+            if(timeElement) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute:'2-digit' });
+                timeElement.textContent = timeString + " IST";
+            }
+        }
+        setInterval(updateLiveTime, 1000);
+        updateLiveTime();
+
+        // 3. Smooth Copy to Clipboard UX
+        const copyBtn = document.getElementById('copy-email-btn');
+        if(copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const emailToCopy = "your.email@example.com"; // Add your actual email here in the code later
+                
+                // Canvas/iframe safe copy method
+                const textArea = document.createElement("textarea");
+                textArea.value = emailToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                textArea.remove();
+
+                // UI Feedback transition
+                const icon = document.getElementById('email-icon');
+                const text = document.getElementById('email-text');
+                const originalClass = icon.className;
+                
+                icon.className = "ph-fill ph-check-circle text-xl text-brand-primary";
+                text.textContent = "Copied!";
+                copyBtn.classList.replace('bg-brand-dark', 'bg-white');
+                copyBtn.classList.replace('text-white', 'text-brand-dark');
+                copyBtn.classList.add('border', 'border-brand-primary', 'shadow-brand-primary/20');
+                
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    icon.className = originalClass;
+                    text.textContent = "Copy Email";
+                    copyBtn.classList.replace('bg-white', 'bg-brand-dark');
+                    copyBtn.classList.replace('text-brand-dark', 'text-white');
+                    copyBtn.classList.remove('border', 'border-brand-primary', 'shadow-brand-primary/20');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
