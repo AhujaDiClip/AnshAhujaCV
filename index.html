@@ -386,33 +386,6 @@
         body.corporate-active .genz-text { display: none; }
         body.corporate-active .corp-text { display: inline-block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- EXPERIMENT 13: X-Ray Analytics View --- */
-        .xray-badge {
-            position: absolute; top: -10px; right: -10px; opacity: 0; pointer-events: none;
-            background: #18181B; border: 1px solid #0D9488; color: #5EEAD4; font-family: monospace; font-size: 9px; padding: 4px 8px; border-radius: 6px; z-index: 100; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
-            transform: translateY(10px);
-        }
-        body.xray-active .xray-badge { opacity: 1; transform: translateY(0); }
-        body.xray-active .bento-card { border: 1px dashed rgba(13, 148, 136, 0.5); background: rgba(255, 255, 255, 0.2); }
-        body.xray-active .bento-card * { outline: 1px solid rgba(255, 113, 91, 0.1); }
-
-        /* --- EXPERIMENT 14: Isometric 3D Explode --- */
-        #main-wrapper {
-            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-            transform-style: preserve-3d;
-        }
-        body.exploded-active #main-wrapper {
-            transform: perspective(3000px) rotateX(45deg) rotateZ(-25deg) scale(0.7) translateY(-100px);
-        }
-        body.exploded-active .bento-card {
-            box-shadow: -30px 30px 40px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(13, 148, 136, 0.5) !important;
-            transform: translateZ(50px) !important;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        body.exploded-active header { transform: translateZ(100px); transition: transform 1s; }
-        body.exploded-active .marquee-container { opacity: 0; }
     </style>
 </head>
 <body class="antialiased min-h-screen selection:bg-brand-secondary selection:text-white p-4 md:p-8 transition-all duration-700">
@@ -502,18 +475,6 @@
                 <i class="ph-fill ph-briefcase text-zinc-800 text-sm"></i>
                 <span>Corp. <span id="corporate-status" class="text-zinc-400">OFF</span></span>
             </button>
-            
-            <!-- X-Ray Mode -->
-            <button id="xray-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
-                <i class="ph-fill ph-scan text-brand-primary text-sm"></i>
-                <span>X-Ray <span id="xray-status" class="text-zinc-400">OFF</span></span>
-            </button>
-            
-            <!-- 3D Explode Mode -->
-            <button id="explode-toggle" class="px-3 py-2 bg-zinc-900 backdrop-blur-md border border-zinc-700 rounded-xl text-[10px] font-bold tracking-wide uppercase text-white shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95 hover:bg-brand-secondary">
-                <i class="ph-fill ph-cube text-brand-secondary hover:text-white text-sm"></i>
-                <span>3D View <span id="explode-status" class="text-zinc-400">OFF</span></span>
-            </button>
         </div>
 
         <!-- Heatmap Toggle (Full Width) -->
@@ -543,13 +504,11 @@
         </div>
     </div>
 
-    <!-- MAIN WRAPPER (For 3D Explode) -->
-    <div id="main-wrapper">
-        <main class="max-w-6xl mx-auto relative z-10">
-            
-            <!-- HEADER -->
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 animate-fade-in" style="animation-delay: 0ms;">
-                <div>
+    <main class="max-w-6xl mx-auto relative z-10">
+        
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 animate-fade-in" style="animation-delay: 0ms;">
+            <div>
                     <!-- UX Status Indicator -->
                     <div class="flex flex-wrap items-center gap-3 mb-4">
                         <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-dark">
@@ -611,7 +570,6 @@
 
                 <!-- THE VIBE (About) -->
                 <div class="bento-card col-span-1 md:col-span-2 row-span-2 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="animation-delay: 100ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-eye"></i> Views: 1.4k | Dwell: 42s</div>
                     <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:rotate-12 transition-all duration-500">
                         <i class="ph-fill ph-sparkle text-8xl text-brand-secondary genz-text"></i>
                         <i class="ph-fill ph-briefcase text-8xl text-zinc-800 corp-text"></i>
@@ -624,7 +582,7 @@
                     <p class="text-brand-muted text-lg leading-relaxed relative z-10 genz-text">
                         Not your average corporate suit. I'm a Gen Z marketer who speaks fluent internet and designs campaigns optimized for <strong>high emotional ROI and low cognitive load.</strong> 
                         <br><br>
-                        I treat every marketing touchpoint like a user interface—it needs to be intuitive, gorgeous, and frictionless. Think golden retriever energy, but with a color-coded Notion workspace and a Figma board—I bring weaponized extrovertness balanced with absolute responsibility. I don't just follow trends; I reverse-engineer the psychology and UX behind why they work.
+                        I treat every marketing touchpoint like a user interface—it needs to be intuitive, gorgeous, and frictionless. Think golden retriever energy, but with a color-coded Notion workspace, curated Pinterest boards, and Gemini/Claude on split-screen—I bring weaponized extrovertness balanced with absolute responsibility. I don't just follow trends; I reverse-engineer the psychology and UX behind why they work.
                         <br><br>
                         Looking to bring fresh eyes, an authentic voice, and a true "pana" mentality to your marketing team. Let's make some noise.
                     </p>
@@ -639,7 +597,6 @@
 
                 <!-- THE SUPERPOWER (ADHD) -->
                 <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-8 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-lightning"></i> Pattern Recog: Max</div>
                     <!-- Subtle internal gradient for UX depth -->
                     <div class="absolute inset-0 bg-gradient-to-br from-teal-50/40 via-transparent to-orange-50/40 z-0"></div>
                     <div class="relative z-10">
@@ -663,7 +620,6 @@
 
                 <!-- SKILLS -->
                 <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 300ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-chart-bar"></i> Skill Match: 98%</div>
                     <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
                         <i class="ph-fill ph-toolbox text-brand-primary"></i> 
                         <span class="genz-text">Toolkit</span>
@@ -671,20 +627,19 @@
                     </h2>
                     <div class="flex flex-wrap gap-2">
                         <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">UI/UX Design 🎨</span>
-                        <span class="repel-tag px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-sm text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20">Figma & Prototyping</span>
+                        <span class="repel-tag px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-sm text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20">GenAI (Gemini & Claude)</span>
                         <span class="repel-tag px-3 py-1 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 rounded-xl text-sm font-medium shadow-sm hover:bg-brand-secondary/20">
                             <span class="genz-text">Desi Rizz ✨</span><span class="corp-text">Stakeholder Comms ✨</span>
                         </span>
                         <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Marketing Analytics 📈</span>
                         <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Social Media Strategy</span>
-                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">User Journey Mapping</span>
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">GitHub & Pinterest</span>
                         <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Copywriting</span>
                     </div>
                 </div>
 
                 <!-- EXPERIENCE / RECEIPTS -->
                 <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 400ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-trend-up"></i> Impact ROI: High</div>
                     <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
                         <i class="ph-fill ph-receipt text-brand-secondary"></i> 
                         <span class="genz-text">The Receipts</span>
@@ -718,7 +673,6 @@
 
                 <!-- CURRENT HYPERFOCUS -->
                 <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 450ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-activity"></i> Active Process</div>
                     <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
                         <i class="ph-fill ph-crosshair text-brand-primary"></i> 
                         <span class="genz-text">Current Hyperfocus</span>
@@ -734,20 +688,21 @@
 
                 <!-- DAILY STACK -->
                 <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 480ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-stack"></i> SaaS Stack</div>
                     <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
                         <i class="ph-fill ph-stack text-brand-secondary"></i> Daily Stack
                     </h2>
-                    <div class="flex items-center gap-4 text-2xl text-zinc-500">
-                        <i class="ph-fill ph-figma-logo hover:text-[#F24E1E] transition-colors cursor-none" title="Figma"></i>
+                    <div class="flex flex-wrap items-center gap-3 text-2xl text-zinc-500">
                         <i class="ph-fill ph-notion-logo hover:text-black transition-colors cursor-none" title="Notion"></i>
+                        <i class="ph-fill ph-pinterest-logo hover:text-[#E60023] transition-colors cursor-none" title="Pinterest"></i>
+                        <i class="ph-fill ph-github-logo hover:text-[#181717] transition-colors cursor-none" title="GitHub"></i>
+                        <i class="ph-fill ph-sparkle hover:text-[#1d4ed8] transition-colors cursor-none" title="Google Gemini"></i>
+                        <i class="ph-fill ph-robot hover:text-[#D97757] transition-colors cursor-none" title="Claude AI"></i>
                         <i class="ph-fill ph-chart-line-up hover:text-brand-primary transition-colors cursor-none" title="Analytics"></i>
                     </div>
                 </div>
 
                 <!-- EASTER EGG REVEAL CARD -->
                 <div class="bento-card reveal-card col-span-1 md:col-span-1 rounded-[2rem] p-6 relative flex items-center justify-center overflow-hidden animate-fade-in" style="animation-delay: 490ms; background: repeating-linear-gradient(45deg, #FAF9F6, #FAF9F6 10px, #F4F4F5 10px, #F4F4F5 20px);">
-                    <div class="xray-badge"><i class="ph-bold ph-warning"></i> Hover State: Triggered</div>
                     <!-- Overlay message -->
                     <div class="reveal-overlay absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm z-10">
                         <i class="ph-fill ph-eye-slash text-3xl text-brand-secondary mb-2"></i>
@@ -764,7 +719,6 @@
 
                 <!-- THE PHILOSOPHY -->
                 <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%); animation-delay: 500ms;">
-                    <div class="xray-badge" style="background: white; color: #0D9488;"><i class="ph-bold ph-brain"></i> Cog. Load: Very Low</div>
                     <div class="absolute -right-10 -top-10 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
                         <i class="ph-fill ph-brain text-[200px] text-white"></i>
                     </div>
@@ -805,7 +759,6 @@
 
                 <!-- FUN FACT / HOOK -->
                 <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between transition-transform animate-fade-in" style="animation-delay: 600ms;">
-                    <div class="xray-badge"><i class="ph-bold ph-mouse-left"></i> Click Prob: 99.9%</div>
                     <div class="mb-4 md:mb-0">
                         <h2 class="text-3xl font-bold mb-2 text-brand-dark">
                             <span class="genz-text">Ready to break the internet together?</span>
@@ -827,7 +780,6 @@
             </footer>
 
         </main>
-    </div>
 
     <!-- Custom Cursor & Interactions Script -->
     <script>
@@ -1108,8 +1060,6 @@
                     if (isDyslexicActive && dyslexicToggle) dyslexicToggle.click();
                     if (isBionicActive && bionicToggle) bionicToggle.click();
                     if (isCorpActive && corpToggle) corpToggle.click();
-                    if (isXrayActive && xrayToggle) xrayToggle.click();
-                    if (isExploded && explodeToggle) explodeToggle.click();
                     if (isHeatmapActive && heatmapToggle) heatmapToggle.click();
                     
                     // Reset Vibe Slider
@@ -1220,8 +1170,6 @@
 
             bentoCards.forEach(card => {
                 card.addEventListener('mousemove', (e) => {
-                    if (document.body.classList.contains('exploded-active')) return; // Disable tilt in 3D mode
-                    
                     const rect = card.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
@@ -1236,7 +1184,6 @@
                 });
                 
                 card.addEventListener('mouseleave', () => {
-                    if (document.body.classList.contains('exploded-active')) return;
                     card.style.transform = `perspective(1000px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)`;
                 });
             });
