@@ -47,6 +47,7 @@
             background-size: 24px 24px;
             color: #18181B;
             cursor: crosshair;
+            overflow-x: hidden;
         }
         /* Hide scrollbar for clean look */
         ::-webkit-scrollbar {
@@ -69,7 +70,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.8);
-            transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.1s ease-out;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.1s ease-out, filter 0.3s;
             box-shadow: 0 4px 24px -6px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
             transform-style: preserve-3d;
             will-change: transform;
@@ -109,6 +110,13 @@
 
         /* --- NEW COOL UI/UX ADDITIONS --- */
 
+        /* CSS Variables for Vibe Slider */
+        :root {
+            --marquee-speed: 25s;
+            --shimmer-speed: 4s;
+            --eq-speed: 1.2s;
+        }
+
         /* Equalizer Animation for Music Widget */
         @keyframes eq {
             0% { height: 4px; }
@@ -119,7 +127,7 @@
             width: 3px;
             background-color: currentColor;
             border-radius: 2px;
-            animation: eq 1.2s ease-in-out infinite;
+            animation: eq var(--eq-speed) ease-in-out infinite;
         }
         .eq-bar:nth-child(2) { animation-delay: -0.4s; }
         .eq-bar:nth-child(3) { animation-delay: -0.8s; }
@@ -151,7 +159,7 @@
         .animate-marquee {
             display: inline-block;
             white-space: nowrap;
-            animation: marquee 25s linear infinite;
+            animation: marquee var(--marquee-speed) linear infinite;
         }
         .marquee-container {
             overflow: hidden;
@@ -183,13 +191,13 @@
             text-fill-color: transparent;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: shimmer 4s linear infinite;
+            animation: shimmer var(--shimmer-speed) linear infinite;
         }
 
         /* 2. Custom Cursor Hide Default */
         @media (hover: hover) and (pointer: fine) {
             body { cursor: none; }
-            a, button, .bento-card { cursor: none !important; }
+            a, button, .bento-card, input[type="range"] { cursor: none !important; }
         }
 
         /* Custom Cursor Elements */
@@ -258,9 +266,156 @@
         .hacker-text {
             font-variant-numeric: tabular-nums;
         }
+        
+        /* --- EXPERIMENT CSS --- */
+        
+        /* Exp 1: Heatmap Points */
+        .heatmap-point {
+            position: fixed;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 113, 91, 0.4) 0%, rgba(255, 113, 91, 0) 70%);
+            pointer-events: none;
+            z-index: 9997;
+            transform: translate(-50%, -50%);
+            animation: fadeHeatmap 1.5s forwards cubic-bezier(0.16, 1, 0.3, 1);
+            mix-blend-mode: multiply;
+        }
+        @keyframes fadeHeatmap {
+            to { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+        }
+
+        /* Exp 2: Repel Tags */
+        .repel-tag {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
+
+        /* --- EXPERIMENT 4: Focus Mode --- */
+        body.focus-active .bento-card {
+            filter: grayscale(60%) opacity(0.3);
+            transform: scale(0.98);
+        }
+        body.focus-active .bento-card:hover {
+            filter: grayscale(0%) opacity(1);
+            transform: scale(1.05);
+            z-index: 60;
+            box-shadow: 0 0 50px rgba(13, 148, 136, 0.3);
+        }
+        #focus-overlay {
+            position: fixed; inset: 0; background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(4px);
+            z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        body.focus-active #focus-overlay { opacity: 1; }
+        body.focus-active .fixed, body.focus-active header, body.focus-active .marquee-container, body.focus-active footer {
+            opacity: 0.1; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        body.focus-active #ux-lab-panel { opacity: 1; pointer-events: auto; z-index: 100; }
+
+        /* --- EXPERIMENT 5: Confetti Particles --- */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            animation: pop 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes pop {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* --- EXPERIMENT 6: Glitch Text --- */
+        .glitch-subtle {
+            position: relative;
+            display: inline-block;
+        }
+        .glitch-subtle::before, .glitch-subtle::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent;
+            pointer-events: none;
+        }
+        .glitch-subtle::before {
+            left: 2px; text-shadow: -1px 0 rgba(255, 113, 91, 0.7);
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+            clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
+        }
+        .glitch-subtle::after {
+            left: -2px; text-shadow: -1px 0 rgba(13, 148, 136, 0.7);
+            animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+            clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+        }
+        @keyframes glitch-anim {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(1px, -1px); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px); }
+            20% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -2px); }
+            60% { clip-path: inset(70% 0 10% 0); transform: translate(-1px, 1px); }
+            80% { clip-path: inset(20% 0 50% 0); transform: translate(1px, -1px); }
+            100% { clip-path: inset(50% 0 30% 0); transform: translate(-2px, 1px); }
+        }
+
+        /* --- EXPERIMENT 7: Dyslexic Mode --- */
+        body.dyslexic-active {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif !important;
+            letter-spacing: 0.08em !important;
+            word-spacing: 0.15em !important;
+            line-height: 1.8 !important;
+        }
+        body.dyslexic-active * {
+            font-family: inherit !important;
+            letter-spacing: inherit !important;
+            word-spacing: inherit !important;
+        }
+
+        /* --- EXPERIMENT 10: A/B Theme Shift --- */
+        body.theme-shift-1 { filter: hue-rotate(90deg); }
+        body.theme-shift-2 { filter: hue-rotate(180deg); }
+        body.theme-shift-3 { filter: hue-rotate(270deg); }
+
+        /* --- EXPERIMENT 12: Corporate Mode Code-Switching --- */
+        .corp-text { display: none; }
+        body.corporate-active .genz-text { display: none; }
+        body.corporate-active .corp-text { display: inline-block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- EXPERIMENT 13: X-Ray Analytics View --- */
+        .xray-badge {
+            position: absolute; top: -10px; right: -10px; opacity: 0; pointer-events: none;
+            background: #18181B; border: 1px solid #0D9488; color: #5EEAD4; font-family: monospace; font-size: 9px; padding: 4px 8px; border-radius: 6px; z-index: 100; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+            transform: translateY(10px);
+        }
+        body.xray-active .xray-badge { opacity: 1; transform: translateY(0); }
+        body.xray-active .bento-card { border: 1px dashed rgba(13, 148, 136, 0.5); background: rgba(255, 255, 255, 0.2); }
+        body.xray-active .bento-card * { outline: 1px solid rgba(255, 113, 91, 0.1); }
+
+        /* --- EXPERIMENT 14: Isometric 3D Explode --- */
+        #main-wrapper {
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+        }
+        body.exploded-active #main-wrapper {
+            transform: perspective(3000px) rotateX(45deg) rotateZ(-25deg) scale(0.7) translateY(-100px);
+        }
+        body.exploded-active .bento-card {
+            box-shadow: -30px 30px 40px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(13, 148, 136, 0.5) !important;
+            transform: translateZ(50px) !important;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        body.exploded-active header { transform: translateZ(100px); transition: transform 1s; }
+        body.exploded-active .marquee-container { opacity: 0; }
     </style>
 </head>
-<body class="antialiased min-h-screen selection:bg-brand-secondary selection:text-white p-4 md:p-8">
+<body class="antialiased min-h-screen selection:bg-brand-secondary selection:text-white p-4 md:p-8 transition-all duration-700">
 
     <!-- 3. SVG Noise Filter (Premium UI texture) -->
     <svg class="noise-overlay text-transparent w-full h-full">
@@ -274,7 +429,7 @@
     <div class="cursor-dot hidden md:block"></div>
     <div class="cursor-outline hidden md:block"></div>
 
-    <!-- Glowing Background Blob (Psychological Anchoring) -->
+    <!-- Glowing Background Blob -->
     <div class="fixed top-0 left-1/4 w-96 h-96 bg-brand-primary/15 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none z-0 animate-pulse-slow"></div>
     <div class="fixed bottom-0 right-1/4 w-96 h-96 bg-brand-secondary/10 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none z-0"></div>
 
@@ -290,228 +445,389 @@
         <div class="emoji-float text-3xl" style="left: 80%; animation-duration: 19s; animation-delay: 6s;">✨</div>
     </div>
 
-    <main class="max-w-6xl mx-auto relative z-10">
-        
-        <!-- HEADER -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 animate-fade-in" style="animation-delay: 0ms;">
-            <div>
-                <!-- UX Status Indicator -->
-                <div class="flex flex-wrap items-center gap-3 mb-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-dark">
-                        <span class="relative flex h-2.5 w-2.5">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-primary"></span>
-                        </span>
-                        Available for Internships
-                    </div>
-                    <!-- Live Time Widget -->
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-muted">
-                        <i class="ph-fill ph-clock text-brand-primary"></i> <span id="live-time">Loading...</span>
-                    </div>
-                    <!-- Now Playing Widget -->
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#1DB954]/10 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide border border-[#1DB954]/20 shadow-sm text-[#1DB954]">
-                        <i class="ph-fill ph-spotify-logo text-sm"></i>
-                        <span>On Repeat: Lo-Fi Focus</span>
-                        <div class="flex items-end gap-[2px] h-[14px] ml-1">
-                            <div class="eq-bar"></div>
-                            <div class="eq-bar"></div>
-                            <div class="eq-bar"></div>
-                        </div>
-                    </div>
-                </div>
-                <h1 class="text-5xl md:text-7xl font-bold leading-none tracking-tight text-brand-dark drop-shadow-sm">
-                    Hey, I'm <br>
-                    <span class="text-shimmer hacker-text" data-value="Ansh Ahuja">
-                        Ansh Ahuja
-                    </span>
-                </h1>
-                <p class="mt-4 text-xl text-brand-muted font-medium">Marketing Analytics ✦ Community Builder ✦ UI/UX Strategy</p>
-            </div>
-            <div class="flex gap-4 z-20 relative">
-                <button id="copy-email-btn" class="magnetic px-6 py-3 bg-brand-dark text-white rounded-2xl font-bold hover:bg-brand-primary active:scale-95 flex items-center gap-2 shadow-lg hover:shadow-brand-primary/25 cursor-none transition-colors">
-                    <i class="ph ph-envelope-simple text-xl" id="email-icon"></i> <span id="email-text">Copy Email</span>
-                </button>
-                <a href="https://www.linkedin.com/in/anshxahuja/" target="_blank" rel="noopener noreferrer" class="magnetic p-3 bg-white/80 backdrop-blur-sm border border-zinc-200 rounded-2xl hover:border-brand-primary hover:text-brand-primary active:scale-95 text-brand-dark shadow-sm">
-                    <i class="ph ph-linkedin-logo text-xl"></i>
-                </a>
-            </div>
-        </header>
+    <!-- Background Focus Overlay -->
+    <div id="focus-overlay"></div>
 
-        <!-- INFINITE TICKER TAPE -->
-        <div class="w-full marquee-container py-4 mb-8 border-y border-zinc-200/50 bg-white/30 backdrop-blur-sm animate-fade-in" style="animation-delay: 50ms;">
-            <div class="animate-marquee font-medium text-brand-primary/80 tracking-widest text-sm uppercase">
-                <span>✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
-                <span>✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
-            </div>
+    <!-- EXPERIMENT 3: Marketing Funnel Scroll Tracker -->
+    <div class="fixed left-4 top-1/2 -translate-y-1/2 h-2/3 w-1.5 bg-zinc-200/50 rounded-full hidden xl:flex flex-col justify-between items-center z-50 py-2 animate-fade-in" style="animation-delay: 800ms;">
+        <div id="funnel-progress" class="absolute top-0 left-0 w-full bg-gradient-to-b from-brand-primary to-brand-secondary rounded-full transition-all duration-75" style="height: 0%;"></div>
+        
+        <div class="absolute -left-8 top-[10%] flex items-center gap-2 -rotate-90 origin-right">
+            <span class="text-[10px] font-bold text-brand-muted tracking-[0.2em] uppercase whitespace-nowrap">Awareness</span>
+        </div>
+        <div class="absolute -left-8 top-1/2 flex items-center gap-2 -rotate-90 origin-right">
+            <span class="text-[10px] font-bold text-brand-muted tracking-[0.2em] uppercase whitespace-nowrap">Consideration</span>
+        </div>
+        <div class="absolute -left-8 bottom-[10%] flex items-center gap-2 -rotate-90 origin-right">
+            <span class="text-[10px] font-bold text-brand-secondary tracking-[0.2em] uppercase whitespace-nowrap drop-shadow-[0_0_8px_rgba(255,113,91,0.5)]">Conversion</span>
+        </div>
+    </div>
+
+    <!-- MAIN SETTINGS FAB (Floating Action Button) -->
+    <button id="settings-fab" class="fixed bottom-6 left-6 z-[60] px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-700 rounded-2xl text-xs font-bold tracking-widest uppercase text-white shadow-2xl hover:shadow-brand-primary/20 transition-all flex items-center gap-2 active:scale-95 hover:-translate-y-1 animate-fade-in" style="animation-delay: 900ms;">
+        <i class="ph-fill ph-faders text-brand-secondary text-lg"></i>
+        <span>Settings</span>
+    </button>
+
+    <!-- SETTINGS PANEL (Hidden by default) -->
+    <div id="ux-lab-panel" class="fixed bottom-24 left-6 z-50 flex flex-col gap-2 opacity-0 pointer-events-none translate-y-8 scale-95 origin-bottom-left transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] max-h-[75vh] overflow-y-auto pr-2 pb-2 w-64">
+        
+        <!-- Panel Header & Reset -->
+        <div class="flex justify-between items-center w-full bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-sm border border-zinc-200 mb-1">
+            <span class="text-[10px] font-bold text-brand-dark tracking-widest uppercase flex items-center gap-1.5"><i class="ph-fill ph-sliders text-brand-primary"></i> UI/UX Set</span>
+            <button id="reset-settings-btn" class="text-[9px] font-bold text-zinc-500 hover:text-white hover:bg-brand-secondary transition-colors uppercase tracking-wider px-2 py-1 bg-zinc-100 rounded border border-zinc-200 active:scale-95">Reset</button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2">
+            <!-- Focus Mode Toggle -->
+            <button id="focus-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-target text-brand-primary text-sm"></i>
+                <span>Focus <span id="focus-status" class="text-zinc-400">OFF</span></span>
+            </button>
+
+            <!-- Dyslexic Mode Toggle -->
+            <button id="dyslexic-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-text-aa text-[#A855F7] text-sm"></i>
+                <span>Dyslexic <span id="dyslexic-status" class="text-zinc-400">OFF</span></span>
+            </button>
+
+            <!-- Bionic Mode Toggle -->
+            <button id="bionic-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-eye text-brand-primary text-sm"></i>
+                <span>Bionic <span id="bionic-status" class="text-zinc-400">OFF</span></span>
+            </button>
+            
+            <!-- Corporate Mode Switcher -->
+            <button id="corporate-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-briefcase text-zinc-800 text-sm"></i>
+                <span>Corp. <span id="corporate-status" class="text-zinc-400">OFF</span></span>
+            </button>
+            
+            <!-- X-Ray Mode -->
+            <button id="xray-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-scan text-brand-primary text-sm"></i>
+                <span>X-Ray <span id="xray-status" class="text-zinc-400">OFF</span></span>
+            </button>
+            
+            <!-- 3D Explode Mode -->
+            <button id="explode-toggle" class="px-3 py-2 bg-zinc-900 backdrop-blur-md border border-zinc-700 rounded-xl text-[10px] font-bold tracking-wide uppercase text-white shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95 hover:bg-brand-secondary">
+                <i class="ph-fill ph-cube text-brand-secondary hover:text-white text-sm"></i>
+                <span>3D View <span id="explode-status" class="text-zinc-400">OFF</span></span>
+            </button>
         </div>
 
-        <!-- BENTO GRID -->
-        <div id="bento-container" class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+        <!-- Heatmap Toggle (Full Width) -->
+        <button id="heatmap-toggle" class="w-full px-4 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex items-center justify-between active:scale-95 mt-1">
+            <span class="flex items-center gap-2"><i class="ph-fill ph-thermometer text-brand-secondary text-sm"></i> UX Heatmap</span>
+            <span id="heatmap-status" class="text-zinc-400">OFF</span>
+        </button>
 
-            <!-- THE VIBE (About) -->
-            <div class="bento-card col-span-1 md:col-span-2 row-span-2 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="animation-delay: 100ms;">
-                <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:rotate-12 transition-all duration-500">
-                    <i class="ph-fill ph-sparkle text-8xl text-brand-secondary"></i>
+        <!-- A/B Test Theme Toggle (Full Width) -->
+        <button id="ab-test-toggle" class="w-full px-4 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex items-center justify-between active:scale-95">
+            <span class="flex items-center gap-2"><i class="ph-fill ph-palette text-[#3B82F6] text-sm"></i> A/B Shift Theme</span>
+            <i class="ph-bold ph-arrows-clockwise text-zinc-400"></i>
+        </button>
+
+        <!-- Vibe Slider -->
+        <div class="w-full px-4 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl flex flex-col gap-1 shadow-sm mt-1">
+            <span class="text-[10px] font-bold text-brand-dark uppercase tracking-wider flex justify-between">
+                <span>Vibe Level</span>
+                <span id="vibe-label" class="text-brand-secondary">Normal</span>
+            </span>
+            <input type="range" id="vibe-slider" min="1" max="3" value="2" class="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer">
+            <style>
+                #vibe-slider::-webkit-slider-thumb {
+                    appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #FF715B; cursor: crosshair;
+                }
+            </style>
+        </div>
+    </div>
+
+    <!-- MAIN WRAPPER (For 3D Explode) -->
+    <div id="main-wrapper">
+        <main class="max-w-6xl mx-auto relative z-10">
+            
+            <!-- HEADER -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 animate-fade-in" style="animation-delay: 0ms;">
+                <div>
+                    <!-- UX Status Indicator -->
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-dark">
+                            <span class="relative flex h-2.5 w-2.5">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-primary"></span>
+                            </span>
+                            <span class="genz-text">Available for Internships</span>
+                            <span class="corp-text">Open to Opportunities</span>
+                        </div>
+                        <!-- Live Time Widget -->
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide uppercase border border-zinc-200 shadow-sm text-brand-muted">
+                            <i class="ph-fill ph-clock text-brand-primary"></i> <span id="live-time">Loading...</span>
+                        </div>
+                        <!-- Now Playing Widget -->
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#1DB954]/10 backdrop-blur-sm rounded-full text-xs font-bold tracking-wide border border-[#1DB954]/20 shadow-sm text-[#1DB954]">
+                            <i class="ph-fill ph-spotify-logo text-sm"></i>
+                            <span class="genz-text">On Repeat: Lo-Fi Focus</span>
+                            <span class="corp-text">Deep Work Audio</span>
+                            <div class="flex items-end gap-[2px] h-[14px] ml-1">
+                                <div class="eq-bar"></div>
+                                <div class="eq-bar"></div>
+                                <div class="eq-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-bold leading-none tracking-tight text-brand-dark drop-shadow-sm">
+                        <span class="genz-text">Hey, I'm</span><span class="corp-text">Greetings, I am</span> <br>
+                        <span class="text-shimmer hacker-text" data-value="Ansh Ahuja">
+                            Ansh Ahuja
+                        </span>
+                    </h1>
+                    <p class="mt-4 text-xl text-brand-muted font-medium">Marketing Analytics ✦ Community Builder ✦ UI/UX Strategy</p>
                 </div>
-                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
-                    <i class="ph-fill ph-user-circle text-brand-primary"></i> The Vibe
-                </h2>
-                <p class="text-brand-muted text-lg leading-relaxed relative z-10">
-                    Not your average corporate suit. I'm a Gen Z marketer who speaks fluent internet and designs campaigns optimized for <strong>high emotional ROI and low cognitive load.</strong> 
-                    <br><br>
-                    I treat every marketing touchpoint like a user interface—it needs to be intuitive, gorgeous, and frictionless. Think golden retriever energy, but with a color-coded Notion workspace and a Figma board—I bring weaponized extrovertness balanced with absolute responsibility. I don't just follow trends; I reverse-engineer the psychology and UX behind why they work.
-                    <br><br>
-                    Looking to bring fresh eyes, an authentic voice, and a true "pana" mentality to your marketing team. Let's make some noise.
-                </p>
+                <div class="flex gap-4 z-20 relative">
+                    <button id="copy-email-btn" class="magnetic px-6 py-3 bg-brand-dark text-white rounded-2xl font-bold hover:bg-brand-primary active:scale-95 flex items-center gap-2 shadow-lg hover:shadow-brand-primary/25 cursor-none transition-colors">
+                        <i class="ph ph-envelope-simple text-xl" id="email-icon"></i> 
+                        <span id="email-text" class="genz-text">Slide into my inbox</span>
+                        <span id="email-text-corp" class="corp-text">Initiate Contact</span>
+                    </button>
+                    <a href="https://www.linkedin.com/in/anshxahuja/" target="_blank" rel="noopener noreferrer" class="magnetic p-3 bg-white/80 backdrop-blur-sm border border-zinc-200 rounded-2xl hover:border-brand-primary hover:text-brand-primary active:scale-95 text-brand-dark shadow-sm">
+                        <i class="ph ph-linkedin-logo text-xl"></i>
+                    </a>
+                </div>
+            </header>
+
+            <!-- INFINITE TICKER TAPE -->
+            <div class="w-full marquee-container py-4 mb-8 border-y border-zinc-200/50 bg-white/30 backdrop-blur-sm animate-fade-in" style="animation-delay: 50ms;">
+                <div class="animate-marquee font-medium text-brand-primary/80 tracking-widest text-sm uppercase">
+                    <span class="genz-text">✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
+                    <span class="genz-text">✦ HIGH EMOTIONAL ROI ✦ DATA TRANSLATOR ✦ NEURODIVERGENT MARKETER ✦ UI/UX ENTHUSIAST ✦ DESI RIZZ EXPERT ✦ BEHAVIORAL PSYCHOLOGY ✦ LOW COGNITIVE LOAD </span>
+                    <span class="corp-text">✦ STRATEGIC FORECASTING ✦ DATA-DRIVEN INSIGHTS ✦ INNOVATIVE PROBLEM SOLVER ✦ USER-CENTRIC DESIGN ✦ CROSS-CULTURAL ENGAGEMENT ✦ CONSUMER BEHAVIOR ✦ OPTIMIZED WORKFLOWS </span>
+                    <span class="corp-text">✦ STRATEGIC FORECASTING ✦ DATA-DRIVEN INSIGHTS ✦ INNOVATIVE PROBLEM SOLVER ✦ USER-CENTRIC DESIGN ✦ CROSS-CULTURAL ENGAGEMENT ✦ CONSUMER BEHAVIOR ✦ OPTIMIZED WORKFLOWS </span>
+                </div>
             </div>
 
-            <!-- THE SUPERPOWER (ADHD) -->
-            <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-8 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
-                <!-- Subtle internal gradient for UX depth -->
-                <div class="absolute inset-0 bg-gradient-to-br from-teal-50/40 via-transparent to-orange-50/40 z-0"></div>
-                <div class="relative z-10">
+            <!-- BENTO GRID -->
+            <div id="bento-container" class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+
+                <!-- THE VIBE (About) -->
+                <div class="bento-card col-span-1 md:col-span-2 row-span-2 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="animation-delay: 100ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-eye"></i> Views: 1.4k | Dwell: 42s</div>
+                    <div class="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 group-hover:rotate-12 transition-all duration-500">
+                        <i class="ph-fill ph-sparkle text-8xl text-brand-secondary genz-text"></i>
+                        <i class="ph-fill ph-briefcase text-8xl text-zinc-800 corp-text"></i>
+                    </div>
                     <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
-                        <i class="ph-fill ph-lightning text-brand-secondary drop-shadow-sm"></i> The Secret Weapon
+                        <i class="ph-fill ph-user-circle text-brand-primary"></i> 
+                        <span class="genz-text">The Vibe</span>
+                        <span class="corp-text">Executive Summary</span>
                     </h2>
-                    <h3 class="text-xl font-semibold text-brand-primary mb-2">Neurodivergent & Proud</h3>
-                    <p class="text-brand-muted">
-                        Yeah, I have ADHD. In marketing, that's a psychological cheat code. It means I possess <strong>hyper-focus</strong> for creative ideation, a brain wired for <strong>rapid pattern recognition</strong> in analytics, and the ability to connect seemingly unrelated dots. Out-of-the-box thinking? The box is a dot to me.
+                    <p class="text-brand-muted text-lg leading-relaxed relative z-10 genz-text">
+                        Not your average corporate suit. I'm a Gen Z marketer who speaks fluent internet and designs campaigns optimized for <strong>high emotional ROI and low cognitive load.</strong> 
+                        <br><br>
+                        I treat every marketing touchpoint like a user interface—it needs to be intuitive, gorgeous, and frictionless. Think golden retriever energy, but with a color-coded Notion workspace and a Figma board—I bring weaponized extrovertness balanced with absolute responsibility. I don't just follow trends; I reverse-engineer the psychology and UX behind why they work.
+                        <br><br>
+                        Looking to bring fresh eyes, an authentic voice, and a true "pana" mentality to your marketing team. Let's make some noise.
+                    </p>
+                    <p class="text-brand-muted text-lg leading-relaxed relative z-10 corp-text">
+                        A highly adaptable marketing professional specializing in the intersection of digital strategy, consumer psychology, and user experience design. I focus on developing campaigns that deliver <strong>high engagement metrics and optimized conversion funnels.</strong>
+                        <br><br>
+                        By treating every brand touchpoint as an interface, I ensure seamless and intuitive customer journeys. I combine cross-functional communication skills with rigorous organizational systems (utilizing modern project management tools). Rather than chasing market volatility, I analyze the underlying behavioral drivers of consumer trends.
+                        <br><br>
+                        Seeking a strategic role to deliver data-backed insights, innovative solutions, and measurable impact to your organization.
                     </p>
                 </div>
-            </div>
 
-            <!-- SKILLS -->
-            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 300ms;">
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
-                    <i class="ph-fill ph-toolbox text-brand-primary"></i> Toolkit
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">UI/UX Design 🎨</span>
-                    <span class="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-sm text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20 transition-colors cursor-default">Figma & Prototyping</span>
-                    <span class="px-3 py-1 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 rounded-xl text-sm font-medium shadow-sm hover:bg-brand-secondary/20 transition-colors cursor-default">Desi Rizz ✨</span>
-                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Marketing Analytics 📈</span>
-                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Social Media Strategy</span>
-                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">User Journey Mapping</span>
-                    <span class="px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white transition-colors cursor-default shadow-sm">Copywriting</span>
-                </div>
-            </div>
-
-            <!-- EXPERIENCE / RECEIPTS -->
-            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 400ms;">
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
-                    <i class="ph-fill ph-receipt text-brand-secondary"></i> The Receipts
-                </h2>
-                <ul class="space-y-4">
-                    <li class="border-l-2 border-brand-secondary pl-4 relative">
-                        <div class="absolute w-2 h-2 bg-brand-secondary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#FF715B]"></div>
-                        <h4 class="font-bold text-brand-dark leading-tight">Cultural Rep & Hypeperson</h4>
-                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023 - 2024</p>
-                        <p class="text-sm text-zinc-600 mt-1">Weaponized <strong>Desi Rizz</strong> to pack events. Blended cultural nuances with Gen Z marketing to double memberships.</p>
-                    </li>
-                    <li class="border-l-2 border-brand-primary pl-4 relative">
-                        <div class="absolute w-2 h-2 bg-brand-primary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#0D9488]"></div>
-                        <h4 class="font-bold text-brand-dark leading-tight">Social Media Manager <span class="text-brand-primary text-sm font-medium"><br>@ Jagdish Silk Store</span></h4>
-                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">Freelance</p>
-                        <p class="text-sm text-zinc-600 mt-1">Drove hyper-localized campaigns targeting real human behavior, optimizing the digital storefront UX for genuine off-season foot traffic.</p>
-                    </li>
-                    <li class="border-l-2 border-zinc-300 pl-4 relative">
-                        <div class="absolute w-2 h-2 bg-zinc-300 rounded-full -left-[5px] top-1.5"></div>
-                        <h4 class="font-bold text-brand-dark leading-tight">Data & UX Growth Project <span class="text-brand-muted text-sm font-medium"><br>@ University</span></h4>
-                        <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023</p>
-                        <p class="text-sm text-zinc-600 mt-1">Mapped user journeys and combined analytics with behavioral psychology to design a frictionless Gen Z retention strategy.</p>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- CURRENT HYPERFOCUS (New Card) -->
-            <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 450ms;">
-                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
-                    <i class="ph-fill ph-crosshair text-brand-primary"></i> Current Hyperfocus
-                </h2>
-                <p class="text-brand-muted text-sm leading-relaxed">
-                    Channeling the ADHD superpower into my latest obsessions: <strong class="text-brand-primary">Behavioral Economics</strong>, dissecting Brutalist UI web trends, and perfecting the ultimate matcha latte to fuel my analytics dashboards.
-                </p>
-            </div>
-
-            <!-- DAILY STACK (New Card) -->
-            <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 480ms;">
-                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
-                    <i class="ph-fill ph-stack text-brand-secondary"></i> Daily Stack
-                </h2>
-                <div class="flex items-center gap-4 text-2xl text-zinc-500">
-                    <i class="ph-fill ph-figma-logo hover:text-[#F24E1E] transition-colors cursor-none" title="Figma"></i>
-                    <i class="ph-fill ph-notion-logo hover:text-black transition-colors cursor-none" title="Notion"></i>
-                    <i class="ph-fill ph-chart-line-up hover:text-brand-primary transition-colors cursor-none" title="Analytics"></i>
-                </div>
-            </div>
-
-            <!-- EASTER EGG REVEAL CARD -->
-            <div class="bento-card reveal-card col-span-1 md:col-span-1 rounded-[2rem] p-6 relative flex items-center justify-center overflow-hidden animate-fade-in" style="animation-delay: 490ms; background: repeating-linear-gradient(45deg, #FAF9F6, #FAF9F6 10px, #F4F4F5 10px, #F4F4F5 20px);">
-                <!-- Overlay message -->
-                <div class="reveal-overlay absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm z-10">
-                    <i class="ph-fill ph-eye-slash text-3xl text-brand-secondary mb-2"></i>
-                    <p class="font-bold text-sm text-brand-dark tracking-wide uppercase">Hover to reveal</p>
-                    <p class="text-[10px] text-brand-muted font-medium">My biggest red flag 🚩</p>
-                </div>
-                <!-- Hidden Content -->
-                <div class="reveal-content text-center z-0">
-                    <p class="text-sm font-bold text-brand-dark">I will fundamentally judge a brand based on their kerning and font pairings.</p>
-                    <p class="text-xs text-brand-secondary mt-2 font-medium">(And yes, I use Notion for literally everything).</p>
-                </div>
-            </div>
-
-            <!-- THE PHILOSOPHY (Langhanam & Psych) -->
-            <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%); animation-delay: 500ms;">
-                <div class="absolute -right-10 -top-10 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                    <i class="ph-fill ph-brain text-[200px] text-white"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-white">
-                    <i class="ph-fill ph-lightbulb text-brand-secondary"></i> The Psychology of "Langhanam"
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                    <div class="md:col-span-2">
-                        <p class="text-teal-50 text-lg leading-relaxed">
-                            My worldview—and my marketing strategy—is deeply rooted in human psychology and the ancient concept of <strong class="text-brand-primary bg-white px-2 py-0.5 rounded shadow-sm">Langhanam</strong> (the practice of lightening or mental fasting). 
-                            <br><br>
-                            In an era of chronic overstimulation and decision fatigue, brands fail when they add to the noise. I believe in stripping away the clutter to find the core psychological truth. By reducing cognitive load, we create "breathing room" for a brand to become emotionally resonant. <em class="text-brand-secondary block mt-2 font-medium">Fun fact: This very CV is designed using Langhanam—stripping away corporate fluff to leave only high-signal data.</em>
+                <!-- THE SUPERPOWER (ADHD) -->
+                <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-8 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-lightning"></i> Pattern Recog: Max</div>
+                    <!-- Subtle internal gradient for UX depth -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-teal-50/40 via-transparent to-orange-50/40 z-0"></div>
+                    <div class="relative z-10">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                            <i class="ph-fill ph-lightning text-brand-secondary drop-shadow-sm"></i> 
+                            <span class="genz-text">The Secret Weapon</span>
+                            <span class="corp-text">Cognitive Advantage</span>
+                        </h2>
+                        <h3 class="text-xl font-semibold text-brand-primary mb-2">
+                            <span class="genz-text">Neurodivergent & Proud</span>
+                            <span class="corp-text">Lateral Thinking Framework</span>
+                        </h3>
+                        <p class="text-brand-muted genz-text">
+                            Yeah, I have <strong class="glitch-subtle text-brand-dark" data-text="ADHD">ADHD</strong>. In marketing, that's a psychological cheat code. It means I possess <strong>hyper-focus</strong> for creative ideation, a brain wired for <strong>rapid pattern recognition</strong> in analytics, and the ability to connect seemingly unrelated dots. Out-of-the-box thinking? The box is a dot to me.
+                        </p>
+                        <p class="text-brand-muted corp-text">
+                            My unique cognitive approach allows for sustained focus during high-priority ideation phases. My analytical framework is optimized for <strong>rapid pattern recognition</strong> across diverse datasets, enabling me to synthesize disparate market variables into cohesive, innovative strategies that bypass conventional limitations.
                         </p>
                     </div>
-                    <div class="flex flex-col justify-center space-y-4 border-l md:border-l-2 border-teal-700 md:pl-6 pt-4 md:pt-0">
-                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
-                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
-                            Reduced Cognitive Load
+                </div>
+
+                <!-- SKILLS -->
+                <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 300ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-chart-bar"></i> Skill Match: 98%</div>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                        <i class="ph-fill ph-toolbox text-brand-primary"></i> 
+                        <span class="genz-text">Toolkit</span>
+                        <span class="corp-text">Core Competencies</span>
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">UI/UX Design 🎨</span>
+                        <span class="repel-tag px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-sm text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20">Figma & Prototyping</span>
+                        <span class="repel-tag px-3 py-1 bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 rounded-xl text-sm font-medium shadow-sm hover:bg-brand-secondary/20">
+                            <span class="genz-text">Desi Rizz ✨</span><span class="corp-text">Stakeholder Comms ✨</span>
+                        </span>
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Marketing Analytics 📈</span>
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Social Media Strategy</span>
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">User Journey Mapping</span>
+                        <span class="repel-tag px-3 py-1 bg-white/60 border border-zinc-200/60 rounded-xl text-sm text-zinc-700 hover:bg-white shadow-sm">Copywriting</span>
+                    </div>
+                </div>
+
+                <!-- EXPERIENCE / RECEIPTS -->
+                <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 400ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-trend-up"></i> Impact ROI: High</div>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-brand-dark">
+                        <i class="ph-fill ph-receipt text-brand-secondary"></i> 
+                        <span class="genz-text">The Receipts</span>
+                        <span class="corp-text">Track Record</span>
+                    </h2>
+                    <ul class="space-y-4">
+                        <li class="border-l-2 border-brand-secondary pl-4 relative">
+                            <div class="absolute w-2 h-2 bg-brand-secondary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#FF715B]"></div>
+                            <h4 class="font-bold text-brand-dark leading-tight">
+                                <span class="genz-text">Cultural Rep & Hypeperson</span>
+                                <span class="corp-text">Community Dev. Lead</span>
+                            </h4>
+                            <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023 - 2024</p>
+                            <p class="text-sm text-zinc-600 mt-1 genz-text">Weaponized <strong>Desi Rizz</strong> to pack events. Blended cultural nuances with Gen Z marketing to double memberships.</p>
+                            <p class="text-sm text-zinc-600 mt-1 corp-text">Leveraged cultural insights to drive event attendance. Implemented targeted outreach to achieve 100% YoY growth in membership.</p>
+                        </li>
+                        <li class="border-l-2 border-brand-primary pl-4 relative">
+                            <div class="absolute w-2 h-2 bg-brand-primary rounded-full -left-[5px] top-1.5 shadow-[0_0_8px_#0D9488]"></div>
+                            <h4 class="font-bold text-brand-dark leading-tight">Social Media Manager <span class="text-brand-primary text-sm font-medium"><br>@ Jagdish Silk Store</span></h4>
+                            <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">Freelance</p>
+                            <p class="text-sm text-zinc-600 mt-1">Drove hyper-localized campaigns targeting real human behavior, optimizing the digital storefront UX for genuine off-season foot traffic.</p>
+                        </li>
+                        <li class="border-l-2 border-zinc-300 pl-4 relative">
+                            <div class="absolute w-2 h-2 bg-zinc-300 rounded-full -left-[5px] top-1.5"></div>
+                            <h4 class="font-bold text-brand-dark leading-tight">Data & UX Growth Project <span class="text-brand-muted text-sm font-medium"><br>@ University</span></h4>
+                            <p class="text-[10px] uppercase tracking-wider text-brand-muted font-bold mt-1">2023</p>
+                            <p class="text-sm text-zinc-600 mt-1">Mapped user journeys and combined analytics with behavioral psychology to design a frictionless retention strategy.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CURRENT HYPERFOCUS -->
+                <div class="bento-card col-span-1 md:col-span-2 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 450ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-activity"></i> Active Process</div>
+                    <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
+                        <i class="ph-fill ph-crosshair text-brand-primary"></i> 
+                        <span class="genz-text">Current Hyperfocus</span>
+                        <span class="corp-text">Professional Development</span>
+                    </h2>
+                    <p class="text-brand-muted text-sm leading-relaxed genz-text">
+                        Channeling the ADHD superpower into my latest obsessions: <strong class="text-brand-primary">Behavioral Economics</strong>, dissecting Brutalist UI web trends, and perfecting the ultimate matcha latte to fuel my analytics dashboards.
+                    </p>
+                    <p class="text-brand-muted text-sm leading-relaxed corp-text">
+                        Currently directing my continuous learning initiatives toward <strong class="text-brand-primary">Behavioral Economics</strong>, analyzing emerging UI/UX paradigms, and optimizing my personal productivity tech stack for peak analytical output.
+                    </p>
+                </div>
+
+                <!-- DAILY STACK -->
+                <div class="bento-card col-span-1 md:col-span-1 rounded-[2rem] p-6 animate-fade-in" style="animation-delay: 480ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-stack"></i> SaaS Stack</div>
+                    <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-brand-dark">
+                        <i class="ph-fill ph-stack text-brand-secondary"></i> Daily Stack
+                    </h2>
+                    <div class="flex items-center gap-4 text-2xl text-zinc-500">
+                        <i class="ph-fill ph-figma-logo hover:text-[#F24E1E] transition-colors cursor-none" title="Figma"></i>
+                        <i class="ph-fill ph-notion-logo hover:text-black transition-colors cursor-none" title="Notion"></i>
+                        <i class="ph-fill ph-chart-line-up hover:text-brand-primary transition-colors cursor-none" title="Analytics"></i>
+                    </div>
+                </div>
+
+                <!-- EASTER EGG REVEAL CARD -->
+                <div class="bento-card reveal-card col-span-1 md:col-span-1 rounded-[2rem] p-6 relative flex items-center justify-center overflow-hidden animate-fade-in" style="animation-delay: 490ms; background: repeating-linear-gradient(45deg, #FAF9F6, #FAF9F6 10px, #F4F4F5 10px, #F4F4F5 20px);">
+                    <div class="xray-badge"><i class="ph-bold ph-warning"></i> Hover State: Triggered</div>
+                    <!-- Overlay message -->
+                    <div class="reveal-overlay absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm z-10">
+                        <i class="ph-fill ph-eye-slash text-3xl text-brand-secondary mb-2"></i>
+                        <p class="font-bold text-sm text-brand-dark tracking-wide uppercase">Hover to reveal</p>
+                        <p class="text-[10px] text-brand-muted font-medium genz-text">My biggest red flag 🚩</p>
+                        <p class="text-[10px] text-brand-muted font-medium corp-text">Area for improvement 📉</p>
+                    </div>
+                    <!-- Hidden Content -->
+                    <div class="reveal-content text-center z-0">
+                        <p class="text-sm font-bold text-brand-dark">I will fundamentally judge a brand based on their kerning and font pairings.</p>
+                        <p class="text-xs text-brand-secondary mt-2 font-medium">(And yes, I use Notion for literally everything).</p>
+                    </div>
+                </div>
+
+                <!-- THE PHILOSOPHY -->
+                <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 relative overflow-hidden group animate-fade-in" style="background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%); animation-delay: 500ms;">
+                    <div class="xray-badge" style="background: white; color: #0D9488;"><i class="ph-bold ph-brain"></i> Cog. Load: Very Low</div>
+                    <div class="absolute -right-10 -top-10 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                        <i class="ph-fill ph-brain text-[200px] text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-white">
+                        <i class="ph-fill ph-lightbulb text-brand-secondary"></i> 
+                        <span class="genz-text">The Psychology of "Langhanam"</span>
+                        <span class="corp-text">Strategic Minimalism</span>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                        <div class="md:col-span-2">
+                            <p class="text-teal-50 text-lg leading-relaxed genz-text">
+                                My worldview—and my marketing strategy—is deeply rooted in human psychology and the ancient concept of <strong class="text-brand-primary bg-white px-2 py-0.5 rounded shadow-sm">Langhanam</strong> (the practice of lightening or mental fasting). 
+                                <br><br>
+                                In an era of chronic overstimulation and decision fatigue, brands fail when they add to the noise. I believe in stripping away the clutter to find the core psychological truth. By reducing cognitive load, we create "breathing room" for a brand to become emotionally resonant. <em class="text-brand-secondary block mt-2 font-medium">Fun fact: This very CV is designed using Langhanam—stripping away corporate fluff to leave only high-signal data.</em>
+                            </p>
+                            <p class="text-teal-50 text-lg leading-relaxed corp-text">
+                                My strategic framework is anchored in behavioral science and the principle of <strong class="text-brand-primary bg-white px-2 py-0.5 rounded shadow-sm">Langhanam</strong> (calculated reduction). 
+                                <br><br>
+                                In saturated markets characterized by decision fatigue, additive marketing often yields diminishing returns. My methodology focuses on stripping away extraneous messaging to isolate the core value proposition. By systematically reducing cognitive load, we architect a user experience that facilitates rapid decision-making and brand loyalty. <em class="text-brand-secondary block mt-2 font-medium">Note: This portfolio's architecture demonstrates this principle—optimizing signal-to-noise ratio.</em>
+                            </p>
                         </div>
-                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
-                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
-                            The Halo Effect Strategy
-                        </div>
-                        <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
-                            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
-                            High Emotional ROI
+                        <div class="flex flex-col justify-center space-y-4 border-l md:border-l-2 border-teal-700 md:pl-6 pt-4 md:pt-0">
+                            <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                                Reduced Cognitive Load
+                            </div>
+                            <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                                The Halo Effect Strategy
+                            </div>
+                            <div class="flex items-center gap-3 text-sm text-teal-50 font-medium">
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="ph-bold ph-check text-brand-secondary"></i></div>
+                                High Emotional ROI
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- FUN FACT / HOOK -->
-            <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between transition-transform animate-fade-in" style="animation-delay: 600ms;">
-                <div class="mb-4 md:mb-0">
-                    <h2 class="text-3xl font-bold mb-2 text-brand-dark">Ready to break the internet together?</h2>
-                    <p class="font-medium text-brand-muted">Looking for an internship where I can actually make an impact (and maybe some memes).</p>
+                <!-- FUN FACT / HOOK -->
+                <div class="bento-card col-span-1 md:col-span-4 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between transition-transform animate-fade-in" style="animation-delay: 600ms;">
+                    <div class="xray-badge"><i class="ph-bold ph-mouse-left"></i> Click Prob: 99.9%</div>
+                    <div class="mb-4 md:mb-0">
+                        <h2 class="text-3xl font-bold mb-2 text-brand-dark">
+                            <span class="genz-text">Ready to break the internet together?</span>
+                            <span class="corp-text">Ready to scale synergistic growth?</span>
+                        </h2>
+                        <p class="font-medium text-brand-muted genz-text">Looking for an internship where I can actually make an impact (and maybe some memes).</p>
+                        <p class="font-medium text-brand-muted corp-text">Seeking an internship to drive measurable KPIs and strategic brand development.</p>
+                    </div>
+                    <a href="https://wa.me/917814288217?text=Yo!%20Saw%20your%20CV.%20The%20psychology%20vibe%20is%20immaculate%20and%20the%20desi%20rizz%20is%20undeniable.%20Let's%20chat%20about%20breaking%20the%20internet%20together.%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" id="whatsapp-btn" class="magnetic px-8 py-4 bg-brand-secondary text-white rounded-2xl font-bold hover:bg-[#ff5a40] active:scale-95 flex items-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,113,91,0.5)] z-20 relative">
+                        <span class="genz-text">Let's Chat</span><span class="corp-text">Connect</span> <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                    </a>
                 </div>
-                <a href="https://wa.me/917814288217?text=Yo!%20Saw%20your%20CV.%20The%20psychology%20vibe%20is%20immaculate%20and%20the%20desi%20rizz%20is%20undeniable.%20Let's%20chat%20about%20breaking%20the%20internet%20together.%20%F0%9F%9A%80" target="_blank" rel="noopener noreferrer" class="magnetic px-8 py-4 bg-brand-secondary text-white rounded-2xl font-bold hover:bg-[#ff5a40] active:scale-95 flex items-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,113,91,0.5)] z-20 relative">
-                    Let's Chat <i class="ph-bold ph-whatsapp-logo text-xl"></i>
-                </a>
+
             </div>
 
-        </div>
+            <!-- FOOTER -->
+            <footer class="mt-12 text-center text-zinc-400 text-sm pb-8 animate-fade-in" style="animation-delay: 700ms;">
+                <p>Designed with intentionality & AI ✨. © 2026 Ansh Ahuja. All vibes reserved.</p>
+            </footer>
 
-        <!-- FOOTER -->
-        <footer class="mt-12 text-center text-zinc-400 text-sm pb-8 animate-fade-in" style="animation-delay: 700ms;">
-            <p>Designed with intentionality & AI ✨. © 2026 Ansh Ahuja. All vibes reserved.</p>
-        </footer>
-
-    </main>
+        </main>
+    </div>
 
     <!-- Custom Cursor & Interactions Script -->
     <script>
@@ -519,7 +835,53 @@
         if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
             const cursorDot = document.querySelector('.cursor-dot');
             const cursorOutline = document.querySelector('.cursor-outline');
+            let isHeatmapActive = false;
+            let lastHeatmapTime = 0;
+            let isFocusModeActive = false;
+            let isSettingsOpen = false;
             
+            // Settings FAB Logic
+            const settingsFab = document.getElementById('settings-fab');
+            const settingsPanel = document.getElementById('ux-lab-panel');
+            const fabIcon = settingsFab.querySelector('i');
+
+            if (settingsFab && settingsPanel) {
+                settingsFab.addEventListener('click', () => {
+                    isSettingsOpen = !isSettingsOpen;
+                    if (isSettingsOpen) {
+                        settingsPanel.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
+                        settingsPanel.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                        fabIcon.classList.replace('ph-faders', 'ph-x');
+                        settingsFab.classList.add('bg-brand-primary');
+                        settingsFab.classList.replace('bg-zinc-900/95', 'bg-brand-primary');
+                    } else {
+                        settingsPanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
+                        settingsPanel.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                        fabIcon.classList.replace('ph-x', 'ph-faders');
+                        settingsFab.classList.replace('bg-brand-primary', 'bg-zinc-900/95');
+                    }
+                });
+            }
+            
+            // Heatmap Toggle Logic
+            const heatmapToggle = document.getElementById('heatmap-toggle');
+            const heatmapStatus = document.getElementById('heatmap-status');
+            
+            if(heatmapToggle) {
+                heatmapToggle.addEventListener('click', () => {
+                    isHeatmapActive = !isHeatmapActive;
+                    if(isHeatmapActive) {
+                        heatmapStatus.textContent = "ON";
+                        heatmapStatus.className = "text-brand-secondary";
+                        heatmapToggle.classList.add('border-brand-secondary');
+                    } else {
+                        heatmapStatus.textContent = "OFF";
+                        heatmapStatus.className = "text-zinc-400";
+                        heatmapToggle.classList.remove('border-brand-secondary');
+                    }
+                });
+            }
+
             window.addEventListener('mousemove', (e) => {
                 const posX = e.clientX;
                 const posY = e.clientY;
@@ -532,6 +894,22 @@
                     left: `${posX}px`,
                     top: `${posY}px`
                 }, { duration: 500, fill: "forwards" });
+
+                // EXPERIMENT 1: Heatmap Generation
+                if(isHeatmapActive) {
+                    const now = Date.now();
+                    if(now - lastHeatmapTime > 30) { // Throttle point creation
+                        const point = document.createElement('div');
+                        point.className = 'heatmap-point';
+                        point.style.left = `${posX}px`;
+                        point.style.top = `${posY}px`;
+                        document.body.appendChild(point);
+                        
+                        // Clean up DOM
+                        setTimeout(() => point.remove(), 1500);
+                        lastHeatmapTime = now;
+                    }
+                }
             });
 
             // Add hover state to interactive elements
@@ -544,6 +922,248 @@
                     cursorOutline.classList.remove('hover-state');
                 });
             });
+
+            // EXPERIMENT 4: Focus Mode Toggle
+            const focusToggle = document.getElementById('focus-toggle');
+            const focusStatus = document.getElementById('focus-status');
+            
+            if(focusToggle) {
+                focusToggle.addEventListener('click', () => {
+                    isFocusModeActive = !isFocusModeActive;
+                    if(isFocusModeActive) {
+                        document.body.classList.add('focus-active');
+                        focusStatus.textContent = "ON";
+                        focusStatus.className = "text-brand-primary";
+                        focusToggle.classList.add('border-brand-primary');
+                    } else {
+                        document.body.classList.remove('focus-active');
+                        focusStatus.textContent = "OFF";
+                        focusStatus.className = "text-zinc-400";
+                        focusToggle.classList.remove('border-brand-primary');
+                    }
+                });
+            }
+
+            // EXPERIMENT 7: Dyslexic Mode
+            const dyslexicToggle = document.getElementById('dyslexic-toggle');
+            const dyslexicStatus = document.getElementById('dyslexic-status');
+            let isDyslexicActive = false;
+
+            if (dyslexicToggle) {
+                dyslexicToggle.addEventListener('click', () => {
+                    isDyslexicActive = !isDyslexicActive;
+                    if (isDyslexicActive) {
+                        document.body.classList.add('dyslexic-active');
+                        dyslexicStatus.textContent = "ON";
+                        dyslexicStatus.className = "text-[#A855F7]";
+                        dyslexicToggle.classList.add('border-[#A855F7]');
+                    } else {
+                        document.body.classList.remove('dyslexic-active');
+                        dyslexicStatus.textContent = "OFF";
+                        dyslexicStatus.className = "text-zinc-400";
+                        dyslexicToggle.classList.remove('border-[#A855F7]');
+                    }
+                });
+            }
+
+            // EXPERIMENT 8: Bionic Reading Mode
+            const bionicToggle = document.getElementById('bionic-toggle');
+            const bionicStatus = document.getElementById('bionic-status');
+            let isBionicActive = false;
+            
+            // Target elements with heavy text blocks safely
+            const bionicTargets = document.querySelectorAll('.bento-card p, .bento-card h2, .bento-card h3, .bento-card h4, .bento-card li');
+            
+            function bionicifyHTML(html) {
+                const parts = html.split(/(<[^>]+>)/g);
+                return parts.map(part => {
+                    if (part.startsWith('<')) return part;
+                    return part.split(/(\s+)/).map(word => {
+                        if (!word.trim().match(/[a-zA-Z]/)) return word;
+                        const len = word.length;
+                        if (len <= 1) return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word}</b>`;
+                        const mid = Math.ceil(len / 2);
+                        return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word.substring(0, mid)}</b><span style="opacity: 0.75;">${word.substring(mid)}</span>`;
+                    }).join('');
+                }).join('');
+            }
+
+            if (bionicToggle) {
+                bionicToggle.addEventListener('click', () => {
+                    isBionicActive = !isBionicActive;
+                    
+                    if (isBionicActive) {
+                        bionicStatus.textContent = "ON";
+                        bionicStatus.className = "text-brand-primary";
+                        bionicToggle.classList.add('border-brand-primary');
+                        
+                        bionicTargets.forEach(el => {
+                            if (!el.dataset.originalHtml) {
+                                el.dataset.originalHtml = el.innerHTML;
+                            }
+                            el.innerHTML = bionicifyHTML(el.dataset.originalHtml);
+                        });
+                    } else {
+                        bionicStatus.textContent = "OFF";
+                        bionicStatus.className = "text-zinc-400";
+                        bionicToggle.classList.remove('border-brand-primary');
+                        
+                        bionicTargets.forEach(el => {
+                            if (el.dataset.originalHtml) {
+                                el.innerHTML = el.dataset.originalHtml;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // EXPERIMENT 9: Vibe Slider
+            const vibeSlider = document.getElementById('vibe-slider');
+            const vibeLabel = document.getElementById('vibe-label');
+            if(vibeSlider) {
+                vibeSlider.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    const root = document.documentElement;
+                    if(val == 1) { 
+                        vibeLabel.textContent = "Chill";
+                        vibeLabel.className = "text-[#3B82F6]";
+                        root.style.setProperty('--marquee-speed', '50s');
+                        root.style.setProperty('--shimmer-speed', '8s');
+                        root.style.setProperty('--eq-speed', '2.5s');
+                    } else if (val == 2) { 
+                        vibeLabel.textContent = "Normal";
+                        vibeLabel.className = "text-brand-primary";
+                        root.style.setProperty('--marquee-speed', '25s');
+                        root.style.setProperty('--shimmer-speed', '4s');
+                        root.style.setProperty('--eq-speed', '1.2s');
+                    } else { 
+                        vibeLabel.textContent = "Chaos";
+                        vibeLabel.className = "text-brand-secondary animate-pulse";
+                        root.style.setProperty('--marquee-speed', '6s');
+                        root.style.setProperty('--shimmer-speed', '0.8s');
+                        root.style.setProperty('--eq-speed', '0.2s');
+                    }
+                });
+            }
+
+            // EXPERIMENT 10: A/B Test Themes
+            const abTestBtn = document.getElementById('ab-test-toggle');
+            let themeIndex = 0;
+            if(abTestBtn) {
+                abTestBtn.addEventListener('click', () => {
+                    themeIndex = (themeIndex + 1) % 4;
+                    document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
+                    if(themeIndex > 0) {
+                        document.body.classList.add(`theme-shift-${themeIndex}`);
+                    }
+                });
+            }
+
+            // EXPERIMENT 11: Secret "HIRE" Keystroke
+            let keysPressed = [];
+            const secretCode = ['h', 'i', 'r', 'e'];
+            window.addEventListener('keydown', (e) => {
+                keysPressed.push(e.key.toLowerCase());
+                keysPressed = keysPressed.slice(-4);
+                if (JSON.stringify(keysPressed) === JSON.stringify(secretCode)) {
+                    const btn = document.getElementById('whatsapp-btn');
+                    if(btn) {
+                        for(let i=0; i<8; i++) {
+                            setTimeout(() => { btn.click(); }, i * 150);
+                        }
+                    }
+                    setTimeout(() => {
+                        alert('🚩 EASTER EGG UNLOCKED 🚩\n\nYou typed H-I-R-E! Clearly, this is a sign. Slide into my inbox and let\'s get that offer letter drafted! 🎉');
+                    }, 500);
+                }
+            });
+
+            // EXPERIMENT 12: Corporate Mode Code-Switching
+            const corpToggle = document.getElementById('corporate-toggle');
+            const corpStatus = document.getElementById('corporate-status');
+            let isCorpActive = false;
+            if (corpToggle) {
+                corpToggle.addEventListener('click', () => {
+                    isCorpActive = !isCorpActive;
+                    if (isCorpActive) {
+                        document.body.classList.add('corporate-active');
+                        corpStatus.textContent = "ON";
+                        corpStatus.className = "text-zinc-800";
+                        corpToggle.classList.add('border-zinc-800');
+                    } else {
+                        document.body.classList.remove('corporate-active');
+                        corpStatus.textContent = "OFF";
+                        corpStatus.className = "text-zinc-400";
+                        corpToggle.classList.remove('border-zinc-800');
+                    }
+                });
+            }
+
+            // RESET ALL SETTINGS LOGIC
+            const resetBtn = document.getElementById('reset-settings-btn');
+            if(resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    // Click active toggles to safely turn them off
+                    if (isFocusModeActive && focusToggle) focusToggle.click();
+                    if (isDyslexicActive && dyslexicToggle) dyslexicToggle.click();
+                    if (isBionicActive && bionicToggle) bionicToggle.click();
+                    if (isCorpActive && corpToggle) corpToggle.click();
+                    if (isXrayActive && xrayToggle) xrayToggle.click();
+                    if (isExploded && explodeToggle) explodeToggle.click();
+                    if (isHeatmapActive && heatmapToggle) heatmapToggle.click();
+                    
+                    // Reset Vibe Slider
+                    if (vibeSlider && vibeSlider.value !== "2") {
+                        vibeSlider.value = "2";
+                        vibeSlider.dispatchEvent(new Event('input'));
+                    }
+                    
+                    // Reset A/B Theme
+                    if (themeIndex !== 0) {
+                        themeIndex = 0;
+                        document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
+                    }
+                });
+            }
+
+            // EXPERIMENT 5: Particle Explosion on WhatsApp Button
+            const whatsappBtn = document.getElementById('whatsapp-btn');
+            if(whatsappBtn) {
+                whatsappBtn.addEventListener('click', (e) => {
+                    const rect = whatsappBtn.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const colors = ['#0D9488', '#FF715B', '#14B8A6', '#FFFFFF'];
+                    
+                    for (let i = 0; i < 30; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        
+                        // Random properties
+                        const size = Math.random() * 8 + 4;
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * 100 + 50;
+                        const tx = Math.cos(angle) * distance;
+                        const ty = Math.sin(angle) * distance;
+                        
+                        particle.style.width = `${size}px`;
+                        particle.style.height = `${size}px`;
+                        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        particle.style.left = `${centerX}px`;
+                        particle.style.top = `${centerY}px`;
+                        particle.style.setProperty('--tx', `${tx}px`);
+                        particle.style.setProperty('--ty', `${ty}px`);
+                        
+                        document.body.appendChild(particle);
+                        
+                        // Clean up
+                        setTimeout(() => {
+                            particle.remove();
+                        }, 800);
+                    }
+                });
+            }
 
             // Magnetic Buttons Logic
             const magnetics = document.querySelectorAll('.magnetic');
@@ -560,6 +1180,24 @@
                 btn.addEventListener('mouseleave', () => {
                     // Reset position
                     btn.style.transform = `translate(0px, 0px) scale(1)`;
+                });
+            });
+
+            // EXPERIMENT 2: Repel Tags
+            const repelTags = document.querySelectorAll('.repel-tag');
+            repelTags.forEach(tag => {
+                tag.addEventListener('mousemove', (e) => {
+                    const rect = tag.getBoundingClientRect();
+                    // Calculate distance from center of element to mouse
+                    const x = e.clientX - (rect.left + rect.width / 2);
+                    const y = e.clientY - (rect.top + rect.height / 2);
+                    
+                    // Push the element AWAY from the mouse
+                    tag.style.transform = `translate(${-x * 0.3}px, ${-y * 0.3}px) scale(0.95)`;
+                });
+                
+                tag.addEventListener('mouseleave', () => {
+                    tag.style.transform = `translate(0px, 0px) scale(1)`;
                 });
             });
 
@@ -582,6 +1220,8 @@
 
             bentoCards.forEach(card => {
                 card.addEventListener('mousemove', (e) => {
+                    if (document.body.classList.contains('exploded-active')) return; // Disable tilt in 3D mode
+                    
                     const rect = card.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
@@ -596,6 +1236,7 @@
                 });
                 
                 card.addEventListener('mouseleave', () => {
+                    if (document.body.classList.contains('exploded-active')) return;
                     card.style.transform = `perspective(1000px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)`;
                 });
             });
@@ -630,6 +1271,19 @@
             }
         }
 
+        // EXPERIMENT 3: Marketing Funnel Scroll Progress
+        window.addEventListener('scroll', () => {
+            const funnelProgress = document.getElementById('funnel-progress');
+            if(funnelProgress) {
+                // Calculate how far down the user has scrolled as a percentage
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrollPercent = (scrollTop / scrollHeight) * 100;
+                
+                funnelProgress.style.height = `${scrollPercent}%`;
+            }
+        });
+
         // 2. Live Time Widget (IST)
         function updateLiveTime() {
             const timeElement = document.getElementById('live-time');
@@ -659,11 +1313,15 @@
 
                 // UI Feedback transition
                 const icon = document.getElementById('email-icon');
-                const text = document.getElementById('email-text');
+                // Target both Gen Z and Corp text spans inside the button
+                const textGenz = document.getElementById('email-text');
+                const textCorp = document.getElementById('email-text-corp');
                 const originalClass = icon.className;
                 
                 icon.className = "ph-fill ph-check-circle text-xl text-brand-primary";
-                text.textContent = "Copied!";
+                if(textGenz) textGenz.textContent = "Copied!";
+                if(textCorp) textCorp.textContent = "Address Secured";
+                
                 copyBtn.classList.replace('bg-brand-dark', 'bg-white');
                 copyBtn.classList.replace('text-white', 'text-brand-dark');
                 copyBtn.classList.add('border', 'border-brand-primary', 'shadow-brand-primary/20');
@@ -671,7 +1329,8 @@
                 // Revert after 2 seconds
                 setTimeout(() => {
                     icon.className = originalClass;
-                    text.textContent = "Copy Email";
+                    if(textGenz) textGenz.textContent = "Slide into my inbox";
+                    if(textCorp) textCorp.textContent = "Initiate Contact";
                     copyBtn.classList.replace('bg-white', 'bg-brand-dark');
                     copyBtn.classList.replace('text-brand-dark', 'text-white');
                     copyBtn.classList.remove('border', 'border-brand-primary', 'shadow-brand-primary/20');
