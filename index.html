@@ -204,25 +204,28 @@
         .cursor-dot, .cursor-outline {
             position: fixed;
             top: 0; left: 0;
-            transform: translate(-50%, -50%);
             border-radius: 50%;
             z-index: 9999;
             pointer-events: none;
+            will-change: transform;
         }
         .cursor-dot {
             width: 8px;
             height: 8px;
             background-color: #FF715B;
+            margin: -4px 0 0 -4px; /* Center offset */
         }
         .cursor-outline {
             width: 40px;
             height: 40px;
             border: 2px solid rgba(13, 148, 136, 0.5);
+            margin: -20px 0 0 -20px; /* Center offset */
             transition: width 0.2s, height 0.2s, background-color 0.2s;
         }
         .cursor-outline.hover-state {
             width: 60px;
             height: 60px;
+            margin: -30px 0 0 -30px;
             background-color: rgba(255, 113, 91, 0.1);
             border-color: #FF715B;
         }
@@ -272,23 +275,26 @@
         /* Exp 1: Heatmap Points */
         .heatmap-point {
             position: fixed;
+            top: 0; left: 0;
             width: 30px; height: 30px;
+            margin: -15px 0 0 -15px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(255, 113, 91, 0.4) 0%, rgba(255, 113, 91, 0) 70%);
             pointer-events: none;
             z-index: 9997;
-            transform: translate(-50%, -50%);
             animation: fadeHeatmap 1.5s forwards cubic-bezier(0.16, 1, 0.3, 1);
             mix-blend-mode: multiply;
+            will-change: transform, opacity;
         }
         @keyframes fadeHeatmap {
-            to { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+            to { opacity: 0; transform: scale(3); }
         }
 
         /* Exp 2: Repel Tags */
         .repel-tag {
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-block;
+            will-change: transform;
         }
 
         /* --- EXPERIMENT 4: Focus Mode --- */
@@ -386,6 +392,22 @@
         body.corporate-active .genz-text { display: none; }
         body.corporate-active .corp-text { display: inline-block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- EXPERIMENT 14: Flashlight Mode --- */
+        #flashlight-overlay {
+            position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+            background: #000;
+        }
+        body.flashlight-active #flashlight-overlay {
+            opacity: 1;
+            background: radial-gradient(circle 250px at var(--mouse-x, 50%) var(--mouse-y, 50%), transparent 0%, rgba(0,0,0,0.98) 80%);
+        }
+        
+        /* --- EXPERIMENT 13: Scroll Velocity Skew (Applied via JS to #bento-container) --- */
+        #bento-container {
+            will-change: transform;
+            transform-origin: center;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen selection:bg-brand-secondary selection:text-white p-4 md:p-8 transition-all duration-700">
@@ -420,6 +442,9 @@
 
     <!-- Background Focus Overlay -->
     <div id="focus-overlay"></div>
+    
+    <!-- Flashlight Overlay -->
+    <div id="flashlight-overlay"></div>
 
     <!-- EXPERIMENT 3: Marketing Funnel Scroll Tracker -->
     <div class="fixed left-4 top-1/2 -translate-y-1/2 h-2/3 w-1.5 bg-zinc-200/50 rounded-full hidden xl:flex flex-col justify-between items-center z-50 py-2 animate-fade-in" style="animation-delay: 800ms;">
@@ -474,6 +499,18 @@
             <button id="corporate-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
                 <i class="ph-fill ph-briefcase text-zinc-800 text-sm"></i>
                 <span>Corp. <span id="corporate-status" class="text-zinc-400">OFF</span></span>
+            </button>
+            
+            <!-- Flashlight Mode -->
+            <button id="flashlight-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-flashlight text-yellow-500 text-sm"></i>
+                <span>Flashlight <span id="flashlight-status" class="text-zinc-400">OFF</span></span>
+            </button>
+
+            <!-- Sound Design Mode -->
+            <button id="sound-toggle" class="px-3 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-xl text-[10px] font-bold tracking-wide uppercase text-brand-dark shadow-sm hover:shadow-md transition-all flex flex-col items-start gap-1 active:scale-95">
+                <i class="ph-fill ph-speaker-high text-blue-500 text-sm"></i>
+                <span>UI Sounds <span id="sound-status" class="text-zinc-400">OFF</span></span>
             </button>
         </div>
 
@@ -783,412 +820,461 @@
 
     <!-- Custom Cursor & Interactions Script -->
     <script>
-        // Only run cursor script on non-touch devices
+        // --- GLOBAL STATE & VARIABLES ---
+        let isSettingsOpen = false;
+        let isFocusModeActive = false;
+        let isDyslexicActive = false;
+        let isBionicActive = false;
+        let isCorpActive = false;
+        let isFlashlightActive = false;
+        let isHeatmapActive = false;
+        let isSoundActive = false;
+        let themeIndex = 0;
+        let audioCtx;
+
+        // --- DOM ELEMENTS ---
+        const settingsFab = document.getElementById('settings-fab');
+        const settingsPanel = document.getElementById('ux-lab-panel');
+        const fabIcon = settingsFab ? settingsFab.querySelector('i') : null;
+        
+        const focusToggle = document.getElementById('focus-toggle');
+        const focusStatus = document.getElementById('focus-status');
+        
+        const dyslexicToggle = document.getElementById('dyslexic-toggle');
+        const dyslexicStatus = document.getElementById('dyslexic-status');
+        
+        const bionicToggle = document.getElementById('bionic-toggle');
+        const bionicStatus = document.getElementById('bionic-status');
+        const bionicTargets = document.querySelectorAll('.bento-card p, .bento-card h2, .bento-card h3, .bento-card h4, .bento-card li');
+        
+        const corpToggle = document.getElementById('corporate-toggle');
+        const corpStatus = document.getElementById('corporate-status');
+        
+        const flashlightToggle = document.getElementById('flashlight-toggle');
+        const flashlightStatus = document.getElementById('flashlight-status');
+        
+        const soundToggle = document.getElementById('sound-toggle');
+        const soundStatus = document.getElementById('sound-status');
+        
+        const heatmapToggle = document.getElementById('heatmap-toggle');
+        const heatmapStatus = document.getElementById('heatmap-status');
+        
+        const abTestBtn = document.getElementById('ab-test-toggle');
+        const vibeSlider = document.getElementById('vibe-slider');
+        const vibeLabel = document.getElementById('vibe-label');
+
+        // --- SOUND ENGINE ---
+        function playUISound(type) {
+            if (!isSoundActive) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            if (type === 'hover') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            } else if (type === 'click') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            }
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + (type === 'hover' ? 0.05 : 0.1));
+        }
+
+        document.querySelectorAll('button, a').forEach(btn => {
+            btn.addEventListener('click', () => playUISound('click'));
+        });
+
+        // --- UNIVERSAL SETTINGS (Works on Mobile & Desktop) ---
+
+        // Helper function to auto-close the settings panel after a selection
+        function autoCloseSettings() {
+            setTimeout(() => {
+                if (isSettingsOpen) {
+                    isSettingsOpen = false;
+                    settingsPanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
+                    settingsPanel.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                    if(fabIcon) fabIcon.classList.replace('ph-x', 'ph-faders');
+                    if(settingsFab) {
+                        settingsFab.classList.replace('bg-brand-primary', 'bg-zinc-900/95');
+                        settingsFab.classList.remove('bg-brand-primary');
+                    }
+                }
+            }, 250); // 250ms delay allows user to see the toggle change before it hides
+        }
+
+        // Settings Panel Logic
+        if (settingsFab && settingsPanel) {
+            settingsFab.addEventListener('click', () => {
+                isSettingsOpen = !isSettingsOpen;
+                if (isSettingsOpen) {
+                    settingsPanel.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
+                    settingsPanel.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                    fabIcon.classList.replace('ph-faders', 'ph-x');
+                    settingsFab.classList.add('bg-brand-primary');
+                    settingsFab.classList.replace('bg-zinc-900/95', 'bg-brand-primary');
+                } else {
+                    settingsPanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
+                    settingsPanel.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
+                    fabIcon.classList.replace('ph-x', 'ph-faders');
+                    settingsFab.classList.replace('bg-brand-primary', 'bg-zinc-900/95');
+                }
+            });
+        }
+
+        // Corporate Mode
+        if (corpToggle) {
+            corpToggle.addEventListener('click', () => {
+                isCorpActive = !isCorpActive;
+                if (isCorpActive) {
+                    document.body.classList.add('corporate-active');
+                    corpStatus.textContent = "ON";
+                    corpStatus.className = "text-zinc-800";
+                    corpToggle.classList.add('border-zinc-800');
+                } else {
+                    document.body.classList.remove('corporate-active');
+                    corpStatus.textContent = "OFF";
+                    corpStatus.className = "text-zinc-400";
+                    corpToggle.classList.remove('border-zinc-800');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Dyslexic Mode
+        if (dyslexicToggle) {
+            dyslexicToggle.addEventListener('click', () => {
+                isDyslexicActive = !isDyslexicActive;
+                if (isDyslexicActive) {
+                    document.body.classList.add('dyslexic-active');
+                    dyslexicStatus.textContent = "ON";
+                    dyslexicStatus.className = "text-[#A855F7]";
+                    dyslexicToggle.classList.add('border-[#A855F7]');
+                } else {
+                    document.body.classList.remove('dyslexic-active');
+                    dyslexicStatus.textContent = "OFF";
+                    dyslexicStatus.className = "text-zinc-400";
+                    dyslexicToggle.classList.remove('border-[#A855F7]');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Bionic Reading Mode
+        function bionicifyHTML(html) {
+            const parts = html.split(/(<[^>]+>)/g);
+            return parts.map(part => {
+                if (part.startsWith('<')) return part;
+                return part.split(/(\s+)/).map(word => {
+                    if (!word.trim().match(/[a-zA-Z]/)) return word;
+                    const len = word.length;
+                    if (len <= 1) return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word}</b>`;
+                    const mid = Math.ceil(len / 2);
+                    return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word.substring(0, mid)}</b><span style="opacity: 0.75;">${word.substring(mid)}</span>`;
+                }).join('');
+            }).join('');
+        }
+
+        if (bionicToggle) {
+            bionicToggle.addEventListener('click', () => {
+                isBionicActive = !isBionicActive;
+                if (isBionicActive) {
+                    bionicStatus.textContent = "ON";
+                    bionicStatus.className = "text-brand-primary";
+                    bionicToggle.classList.add('border-brand-primary');
+                    bionicTargets.forEach(el => {
+                        if (!el.dataset.originalHtml) el.dataset.originalHtml = el.innerHTML;
+                        el.innerHTML = bionicifyHTML(el.dataset.originalHtml);
+                    });
+                } else {
+                    bionicStatus.textContent = "OFF";
+                    bionicStatus.className = "text-zinc-400";
+                    bionicToggle.classList.remove('border-brand-primary');
+                    bionicTargets.forEach(el => {
+                        if (el.dataset.originalHtml) el.innerHTML = el.dataset.originalHtml;
+                    });
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Focus Mode
+        if (focusToggle) {
+            focusToggle.addEventListener('click', () => {
+                isFocusModeActive = !isFocusModeActive;
+                if (isFocusModeActive) {
+                    document.body.classList.add('focus-active');
+                    focusStatus.textContent = "ON";
+                    focusStatus.className = "text-brand-primary";
+                    focusToggle.classList.add('border-brand-primary');
+                } else {
+                    document.body.classList.remove('focus-active');
+                    focusStatus.textContent = "OFF";
+                    focusStatus.className = "text-zinc-400";
+                    focusToggle.classList.remove('border-brand-primary');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Flashlight Mode
+        if (flashlightToggle) {
+            flashlightToggle.addEventListener('click', () => {
+                isFlashlightActive = !isFlashlightActive;
+                if (isFlashlightActive) {
+                    document.body.classList.add('flashlight-active');
+                    flashlightStatus.textContent = "ON";
+                    flashlightStatus.className = "text-yellow-500";
+                    flashlightToggle.classList.add('border-yellow-500');
+                } else {
+                    document.body.classList.remove('flashlight-active');
+                    flashlightStatus.textContent = "OFF";
+                    flashlightStatus.className = "text-zinc-400";
+                    flashlightToggle.classList.remove('border-yellow-500');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // UI Sounds
+        if (soundToggle) {
+            soundToggle.addEventListener('click', () => {
+                isSoundActive = !isSoundActive;
+                if (isSoundActive) {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    soundStatus.textContent = "ON";
+                    soundStatus.className = "text-blue-500";
+                    soundToggle.classList.add('border-blue-500');
+                } else {
+                    soundStatus.textContent = "OFF";
+                    soundStatus.className = "text-zinc-400";
+                    soundToggle.classList.remove('border-blue-500');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Heatmap
+        if(heatmapToggle) {
+            heatmapToggle.addEventListener('click', () => {
+                isHeatmapActive = !isHeatmapActive;
+                if(isHeatmapActive) {
+                    heatmapStatus.textContent = "ON";
+                    heatmapStatus.className = "text-brand-secondary";
+                    heatmapToggle.classList.add('border-brand-secondary');
+                } else {
+                    heatmapStatus.textContent = "OFF";
+                    heatmapStatus.className = "text-zinc-400";
+                    heatmapToggle.classList.remove('border-brand-secondary');
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // A/B Theme Test
+        if(abTestBtn) {
+            abTestBtn.addEventListener('click', () => {
+                themeIndex = (themeIndex + 1) % 4;
+                document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
+                if(themeIndex > 0) {
+                    document.body.classList.add(`theme-shift-${themeIndex}`);
+                }
+                autoCloseSettings();
+            });
+        }
+
+        // Vibe Slider
+        if(vibeSlider) {
+            vibeSlider.addEventListener('input', (e) => {
+                const val = e.target.value;
+                const root = document.documentElement;
+                if(val == 1) { 
+                    vibeLabel.textContent = "Chill";
+                    vibeLabel.className = "text-[#3B82F6]";
+                    root.style.setProperty('--marquee-speed', '50s');
+                    root.style.setProperty('--shimmer-speed', '8s');
+                    root.style.setProperty('--eq-speed', '2.5s');
+                } else if (val == 2) { 
+                    vibeLabel.textContent = "Normal";
+                    vibeLabel.className = "text-brand-primary";
+                    root.style.setProperty('--marquee-speed', '25s');
+                    root.style.setProperty('--shimmer-speed', '4s');
+                    root.style.setProperty('--eq-speed', '1.2s');
+                } else { 
+                    vibeLabel.textContent = "Chaos";
+                    vibeLabel.className = "text-brand-secondary animate-pulse";
+                    root.style.setProperty('--marquee-speed', '6s');
+                    root.style.setProperty('--shimmer-speed', '0.8s');
+                    root.style.setProperty('--eq-speed', '0.2s');
+                }
+            });
+            // Auto close when releasing the slider
+            vibeSlider.addEventListener('change', autoCloseSettings);
+        }
+
+        // Reset Settings Logic
+        const resetBtn = document.getElementById('reset-settings-btn');
+        if(resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                // Temporarily track state so we don't fire multiple rapid close animations
+                const originalState = isSettingsOpen;
+                
+                if (isFocusModeActive && focusToggle) focusToggle.click();
+                if (isDyslexicActive && dyslexicToggle) dyslexicToggle.click();
+                if (isBionicActive && bionicToggle) bionicToggle.click();
+                if (isCorpActive && corpToggle) corpToggle.click();
+                if (isHeatmapActive && heatmapToggle) heatmapToggle.click();
+                if (isFlashlightActive && flashlightToggle) flashlightToggle.click();
+                if (isSoundActive && soundToggle) soundToggle.click();
+                
+                if (vibeSlider && vibeSlider.value !== "2") {
+                    vibeSlider.value = "2";
+                    vibeSlider.dispatchEvent(new Event('input'));
+                }
+                
+                if (themeIndex !== 0) {
+                    themeIndex = 0;
+                    document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
+                }
+                
+                // Force closing the panel once
+                isSettingsOpen = originalState; 
+                autoCloseSettings();
+            });
+        }
+
+        // --- HOVER / DESKTOP ONLY EFFECTS ---
         if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
             const cursorDot = document.querySelector('.cursor-dot');
             const cursorOutline = document.querySelector('.cursor-outline');
-            let isHeatmapActive = false;
             let lastHeatmapTime = 0;
-            let isFocusModeActive = false;
-            let isSettingsOpen = false;
-            
-            // Settings FAB Logic
-            const settingsFab = document.getElementById('settings-fab');
-            const settingsPanel = document.getElementById('ux-lab-panel');
-            const fabIcon = settingsFab.querySelector('i');
+            const bentoContainer = document.getElementById('bento-container');
+            const bentoCards = document.querySelectorAll('.bento-card');
 
-            if (settingsFab && settingsPanel) {
-                settingsFab.addEventListener('click', () => {
-                    isSettingsOpen = !isSettingsOpen;
-                    if (isSettingsOpen) {
-                        settingsPanel.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
-                        settingsPanel.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
-                        fabIcon.classList.replace('ph-faders', 'ph-x');
-                        settingsFab.classList.add('bg-brand-primary');
-                        settingsFab.classList.replace('bg-zinc-900/95', 'bg-brand-primary');
-                    } else {
-                        settingsPanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8', 'scale-95');
-                        settingsPanel.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0', 'scale-100');
-                        fabIcon.classList.replace('ph-x', 'ph-faders');
-                        settingsFab.classList.replace('bg-brand-primary', 'bg-zinc-900/95');
-                    }
-                });
-            }
-            
-            // Heatmap Toggle Logic
-            const heatmapToggle = document.getElementById('heatmap-toggle');
-            const heatmapStatus = document.getElementById('heatmap-status');
-            
-            if(heatmapToggle) {
-                heatmapToggle.addEventListener('click', () => {
-                    isHeatmapActive = !isHeatmapActive;
-                    if(isHeatmapActive) {
-                        heatmapStatus.textContent = "ON";
-                        heatmapStatus.className = "text-brand-secondary";
-                        heatmapToggle.classList.add('border-brand-secondary');
-                    } else {
-                        heatmapStatus.textContent = "OFF";
-                        heatmapStatus.className = "text-zinc-400";
-                        heatmapToggle.classList.remove('border-brand-secondary');
-                    }
-                });
-            }
+            // --- HIGH PERFORMANCE UNIFIED ANIMATION LOOP ---
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let outlineX = mouseX;
+            let outlineY = mouseY;
+            let isTicking = false;
 
             window.addEventListener('mousemove', (e) => {
-                const posX = e.clientX;
-                const posY = e.clientY;
-                
-                cursorDot.style.left = `${posX}px`;
-                cursorDot.style.top = `${posY}px`;
-                
-                // Add a slight delay to the outline for that smooth UI/UX feel
-                cursorOutline.animate({
-                    left: `${posX}px`,
-                    top: `${posY}px`
-                }, { duration: 500, fill: "forwards" });
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                if (!isTicking) {
+                    requestAnimationFrame(updateUIFrame);
+                    isTicking = true;
+                }
+            }, { passive: true });
 
-                // EXPERIMENT 1: Heatmap Generation
-                if(isHeatmapActive) {
+            function updateUIFrame() {
+                // 1. Hardware Accelerated Cursor Dot
+                if (cursorDot) {
+                    cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+                }
+
+                // 2. Smooth Lerp Cursor Outline
+                outlineX += (mouseX - outlineX) * 0.18;
+                outlineY += (mouseY - outlineY) * 0.18;
+                if (cursorOutline) {
+                    cursorOutline.style.transform = `translate3d(${outlineX}px, ${outlineY}px, 0)`;
+                }
+
+                // 3. Update CSS Variables for Flashlight & Spotlight
+                document.documentElement.style.setProperty('--mouse-x', `${mouseX}px`);
+                document.documentElement.style.setProperty('--mouse-y', `${mouseY}px`);
+
+                // 4. Optimized Heatmap Generation
+                if (isHeatmapActive) {
                     const now = Date.now();
-                    if(now - lastHeatmapTime > 30) { // Throttle point creation
+                    if(now - lastHeatmapTime > 50) { // Throttled to 20fps for performance
                         const point = document.createElement('div');
                         point.className = 'heatmap-point';
-                        point.style.left = `${posX}px`;
-                        point.style.top = `${posY}px`;
+                        // Keep initial position synced with mouse at time of creation
+                        point.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
                         document.body.appendChild(point);
-                        
-                        // Clean up DOM
                         setTimeout(() => point.remove(), 1500);
                         lastHeatmapTime = now;
                     }
                 }
-            });
 
-            // Add hover state to interactive elements
+                // Keep looping if outline is still catching up, otherwise sleep to save CPU
+                if (Math.abs(mouseX - outlineX) > 0.1 || Math.abs(mouseY - outlineY) > 0.1 || isHeatmapActive) {
+                    requestAnimationFrame(updateUIFrame);
+                } else {
+                    isTicking = false;
+                }
+            }
+
+            // Interactive Hover States
             const interactables = document.querySelectorAll('a, button, .bento-card, .px-3.py-1, i[title]');
             interactables.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    cursorOutline.classList.add('hover-state');
+                    if (cursorOutline) cursorOutline.classList.add('hover-state');
+                    playUISound('hover');
                 });
                 el.addEventListener('mouseleave', () => {
-                    cursorOutline.classList.remove('hover-state');
+                    if (cursorOutline) cursorOutline.classList.remove('hover-state');
                 });
             });
 
-            // EXPERIMENT 4: Focus Mode Toggle
-            const focusToggle = document.getElementById('focus-toggle');
-            const focusStatus = document.getElementById('focus-status');
-            
-            if(focusToggle) {
-                focusToggle.addEventListener('click', () => {
-                    isFocusModeActive = !isFocusModeActive;
-                    if(isFocusModeActive) {
-                        document.body.classList.add('focus-active');
-                        focusStatus.textContent = "ON";
-                        focusStatus.className = "text-brand-primary";
-                        focusToggle.classList.add('border-brand-primary');
-                    } else {
-                        document.body.classList.remove('focus-active');
-                        focusStatus.textContent = "OFF";
-                        focusStatus.className = "text-zinc-400";
-                        focusToggle.classList.remove('border-brand-primary');
-                    }
-                });
-            }
-
-            // EXPERIMENT 7: Dyslexic Mode
-            const dyslexicToggle = document.getElementById('dyslexic-toggle');
-            const dyslexicStatus = document.getElementById('dyslexic-status');
-            let isDyslexicActive = false;
-
-            if (dyslexicToggle) {
-                dyslexicToggle.addEventListener('click', () => {
-                    isDyslexicActive = !isDyslexicActive;
-                    if (isDyslexicActive) {
-                        document.body.classList.add('dyslexic-active');
-                        dyslexicStatus.textContent = "ON";
-                        dyslexicStatus.className = "text-[#A855F7]";
-                        dyslexicToggle.classList.add('border-[#A855F7]');
-                    } else {
-                        document.body.classList.remove('dyslexic-active');
-                        dyslexicStatus.textContent = "OFF";
-                        dyslexicStatus.className = "text-zinc-400";
-                        dyslexicToggle.classList.remove('border-[#A855F7]');
-                    }
-                });
-            }
-
-            // EXPERIMENT 8: Bionic Reading Mode
-            const bionicToggle = document.getElementById('bionic-toggle');
-            const bionicStatus = document.getElementById('bionic-status');
-            let isBionicActive = false;
-            
-            // Target elements with heavy text blocks safely
-            const bionicTargets = document.querySelectorAll('.bento-card p, .bento-card h2, .bento-card h3, .bento-card h4, .bento-card li');
-            
-            function bionicifyHTML(html) {
-                const parts = html.split(/(<[^>]+>)/g);
-                return parts.map(part => {
-                    if (part.startsWith('<')) return part;
-                    return part.split(/(\s+)/).map(word => {
-                        if (!word.trim().match(/[a-zA-Z]/)) return word;
-                        const len = word.length;
-                        if (len <= 1) return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word}</b>`;
-                        const mid = Math.ceil(len / 2);
-                        return `<b class="font-black text-brand-dark" style="font-weight: 900;">${word.substring(0, mid)}</b><span style="opacity: 0.75;">${word.substring(mid)}</span>`;
-                    }).join('');
-                }).join('');
-            }
-
-            if (bionicToggle) {
-                bionicToggle.addEventListener('click', () => {
-                    isBionicActive = !isBionicActive;
-                    
-                    if (isBionicActive) {
-                        bionicStatus.textContent = "ON";
-                        bionicStatus.className = "text-brand-primary";
-                        bionicToggle.classList.add('border-brand-primary');
-                        
-                        bionicTargets.forEach(el => {
-                            if (!el.dataset.originalHtml) {
-                                el.dataset.originalHtml = el.innerHTML;
-                            }
-                            el.innerHTML = bionicifyHTML(el.dataset.originalHtml);
-                        });
-                    } else {
-                        bionicStatus.textContent = "OFF";
-                        bionicStatus.className = "text-zinc-400";
-                        bionicToggle.classList.remove('border-brand-primary');
-                        
-                        bionicTargets.forEach(el => {
-                            if (el.dataset.originalHtml) {
-                                el.innerHTML = el.dataset.originalHtml;
-                            }
-                        });
-                    }
-                });
-            }
-
-            // EXPERIMENT 9: Vibe Slider
-            const vibeSlider = document.getElementById('vibe-slider');
-            const vibeLabel = document.getElementById('vibe-label');
-            if(vibeSlider) {
-                vibeSlider.addEventListener('input', (e) => {
-                    const val = e.target.value;
-                    const root = document.documentElement;
-                    if(val == 1) { 
-                        vibeLabel.textContent = "Chill";
-                        vibeLabel.className = "text-[#3B82F6]";
-                        root.style.setProperty('--marquee-speed', '50s');
-                        root.style.setProperty('--shimmer-speed', '8s');
-                        root.style.setProperty('--eq-speed', '2.5s');
-                    } else if (val == 2) { 
-                        vibeLabel.textContent = "Normal";
-                        vibeLabel.className = "text-brand-primary";
-                        root.style.setProperty('--marquee-speed', '25s');
-                        root.style.setProperty('--shimmer-speed', '4s');
-                        root.style.setProperty('--eq-speed', '1.2s');
-                    } else { 
-                        vibeLabel.textContent = "Chaos";
-                        vibeLabel.className = "text-brand-secondary animate-pulse";
-                        root.style.setProperty('--marquee-speed', '6s');
-                        root.style.setProperty('--shimmer-speed', '0.8s');
-                        root.style.setProperty('--eq-speed', '0.2s');
-                    }
-                });
-            }
-
-            // EXPERIMENT 10: A/B Test Themes
-            const abTestBtn = document.getElementById('ab-test-toggle');
-            let themeIndex = 0;
-            if(abTestBtn) {
-                abTestBtn.addEventListener('click', () => {
-                    themeIndex = (themeIndex + 1) % 4;
-                    document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
-                    if(themeIndex > 0) {
-                        document.body.classList.add(`theme-shift-${themeIndex}`);
-                    }
-                });
-            }
-
-            // EXPERIMENT 11: Secret "HIRE" Keystroke
-            let keysPressed = [];
-            const secretCode = ['h', 'i', 'r', 'e'];
-            window.addEventListener('keydown', (e) => {
-                keysPressed.push(e.key.toLowerCase());
-                keysPressed = keysPressed.slice(-4);
-                if (JSON.stringify(keysPressed) === JSON.stringify(secretCode)) {
-                    const btn = document.getElementById('whatsapp-btn');
-                    if(btn) {
-                        for(let i=0; i<8; i++) {
-                            setTimeout(() => { btn.click(); }, i * 150);
-                        }
-                    }
-                    setTimeout(() => {
-                        alert('🚩 EASTER EGG UNLOCKED 🚩\n\nYou typed H-I-R-E! Clearly, this is a sign. Slide into my inbox and let\'s get that offer letter drafted! 🎉');
-                    }, 500);
-                }
-            });
-
-            // EXPERIMENT 12: Corporate Mode Code-Switching
-            const corpToggle = document.getElementById('corporate-toggle');
-            const corpStatus = document.getElementById('corporate-status');
-            let isCorpActive = false;
-            if (corpToggle) {
-                corpToggle.addEventListener('click', () => {
-                    isCorpActive = !isCorpActive;
-                    if (isCorpActive) {
-                        document.body.classList.add('corporate-active');
-                        corpStatus.textContent = "ON";
-                        corpStatus.className = "text-zinc-800";
-                        corpToggle.classList.add('border-zinc-800');
-                    } else {
-                        document.body.classList.remove('corporate-active');
-                        corpStatus.textContent = "OFF";
-                        corpStatus.className = "text-zinc-400";
-                        corpToggle.classList.remove('border-zinc-800');
-                    }
-                });
-            }
-
-            // RESET ALL SETTINGS LOGIC
-            const resetBtn = document.getElementById('reset-settings-btn');
-            if(resetBtn) {
-                resetBtn.addEventListener('click', () => {
-                    // Click active toggles to safely turn them off
-                    if (isFocusModeActive && focusToggle) focusToggle.click();
-                    if (isDyslexicActive && dyslexicToggle) dyslexicToggle.click();
-                    if (isBionicActive && bionicToggle) bionicToggle.click();
-                    if (isCorpActive && corpToggle) corpToggle.click();
-                    if (isHeatmapActive && heatmapToggle) heatmapToggle.click();
-                    
-                    // Reset Vibe Slider
-                    if (vibeSlider && vibeSlider.value !== "2") {
-                        vibeSlider.value = "2";
-                        vibeSlider.dispatchEvent(new Event('input'));
-                    }
-                    
-                    // Reset A/B Theme
-                    if (themeIndex !== 0) {
-                        themeIndex = 0;
-                        document.body.className = document.body.className.replace(/theme-shift-\d/g, '');
-                    }
-                });
-            }
-
-            // EXPERIMENT 5: Particle Explosion on WhatsApp Button
-            const whatsappBtn = document.getElementById('whatsapp-btn');
-            if(whatsappBtn) {
-                whatsappBtn.addEventListener('click', (e) => {
-                    const rect = whatsappBtn.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
-                    
-                    const colors = ['#0D9488', '#FF715B', '#14B8A6', '#FFFFFF'];
-                    
-                    for (let i = 0; i < 30; i++) {
-                        const particle = document.createElement('div');
-                        particle.className = 'particle';
-                        
-                        // Random properties
-                        const size = Math.random() * 8 + 4;
-                        const angle = Math.random() * Math.PI * 2;
-                        const distance = Math.random() * 100 + 50;
-                        const tx = Math.cos(angle) * distance;
-                        const ty = Math.sin(angle) * distance;
-                        
-                        particle.style.width = `${size}px`;
-                        particle.style.height = `${size}px`;
-                        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                        particle.style.left = `${centerX}px`;
-                        particle.style.top = `${centerY}px`;
-                        particle.style.setProperty('--tx', `${tx}px`);
-                        particle.style.setProperty('--ty', `${ty}px`);
-                        
-                        document.body.appendChild(particle);
-                        
-                        // Clean up
-                        setTimeout(() => {
-                            particle.remove();
-                        }, 800);
-                    }
-                });
-            }
-
-            // Magnetic Buttons Logic
-            const magnetics = document.querySelectorAll('.magnetic');
-            magnetics.forEach((btn) => {
+            // Magnetic Buttons (Hardware Accelerated)
+            document.querySelectorAll('.magnetic').forEach((btn) => {
                 btn.addEventListener('mousemove', (e) => {
                     const rect = btn.getBoundingClientRect();
                     const x = e.clientX - rect.left - rect.width / 2;
                     const y = e.clientY - rect.top - rect.height / 2;
-                    
-                    // Pull button slightly towards cursor
-                    btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px) scale(1.02)`;
+                    btn.style.transform = `translate3d(${x * 0.15}px, ${y * 0.15}px, 0) scale(1.02)`;
                 });
-                
                 btn.addEventListener('mouseleave', () => {
-                    // Reset position
-                    btn.style.transform = `translate(0px, 0px) scale(1)`;
+                    btn.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
                 });
             });
 
-            // EXPERIMENT 2: Repel Tags
-            const repelTags = document.querySelectorAll('.repel-tag');
-            repelTags.forEach(tag => {
+            // Repel Tags (Hardware Accelerated)
+            document.querySelectorAll('.repel-tag').forEach(tag => {
                 tag.addEventListener('mousemove', (e) => {
                     const rect = tag.getBoundingClientRect();
-                    // Calculate distance from center of element to mouse
                     const x = e.clientX - (rect.left + rect.width / 2);
                     const y = e.clientY - (rect.top + rect.height / 2);
-                    
-                    // Push the element AWAY from the mouse
-                    tag.style.transform = `translate(${-x * 0.3}px, ${-y * 0.3}px) scale(0.95)`;
+                    tag.style.transform = `translate3d(${-x * 0.3}px, ${-y * 0.3}px, 0) scale(0.95)`;
                 });
-                
                 tag.addEventListener('mouseleave', () => {
-                    tag.style.transform = `translate(0px, 0px) scale(1)`;
+                    tag.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
                 });
             });
 
-            // 1. 3D Tilt Effect on Bento Cards
-            const bentoCards = document.querySelectorAll('.bento-card');
-            const bentoContainer = document.getElementById('bento-container');
-
-            // Handle the spotlight glow effect
-            if(bentoContainer) {
-                bentoContainer.addEventListener('mousemove', (e) => {
-                    bentoCards.forEach(card => {
+            // 3D Tilt Effect
+            bentoCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    // Use RAF internally if needed, but native mousemove is usually fine for this specific math
+                    requestAnimationFrame(() => {
                         const rect = card.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
-                        card.style.setProperty('--mouse-x', `${x}px`);
-                        card.style.setProperty('--mouse-y', `${y}px`);
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        const rotateX = ((y - centerY) / centerY) * -4;
+                        const rotateY = ((x - centerX) / centerX) * 4;
+                        card.style.transform = `perspective(1000px) scale3d(1.02, 1.02, 1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
                     });
                 });
-            }
-
-            bentoCards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    // Calculate rotation (max 4 degrees for subtlety)
-                    const rotateX = ((y - centerY) / centerY) * -4;
-                    const rotateY = ((x - centerX) / centerX) * 4;
-                    
-                    card.style.transform = `perspective(1000px) scale3d(1.02, 1.02, 1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                });
-                
                 card.addEventListener('mouseleave', () => {
                     card.style.transform = `perspective(1000px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)`;
                 });
             });
 
-            // 4. Hacker Text Decrypt Effect
+            // Hacker Text Decrypt Effect
             const hackerText = document.querySelector('.hacker-text');
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             let decryptInterval = null;
@@ -1197,60 +1283,143 @@
                 hackerText.addEventListener('mouseover', event => {
                     let iteration = 0;
                     clearInterval(decryptInterval);
-                    
                     decryptInterval = setInterval(() => {
                         event.target.innerText = event.target.innerText
                             .split("")
                             .map((letter, index) => {
-                                if(index < iteration) {
-                                    return event.target.dataset.value[index];
-                                }
+                                if(index < iteration) return event.target.dataset.value[index];
                                 return letters[Math.floor(Math.random() * 26)];
                             })
                             .join("");
-                        
-                        if(iteration >= event.target.dataset.value.length){ 
-                            clearInterval(decryptInterval);
-                        }
+                        if(iteration >= event.target.dataset.value.length) clearInterval(decryptInterval);
                         iteration += 1 / 3;
                     }, 30);
                 });
             }
+
+            // --- OPTIMIZED SCROLL PHYSICS ---
+            let currentScroll = window.scrollY;
+            let targetSkew = 0;
+            let currentSkew = 0;
+            let isScrollPhysicsActive = false;
+            
+            window.addEventListener('scroll', () => {
+                const newScroll = window.scrollY;
+                const scrollDiff = newScroll - currentScroll;
+                currentScroll = newScroll;
+                
+                targetSkew = scrollDiff * 0.08; 
+                targetSkew = Math.max(-4, Math.min(4, targetSkew)); // Clamp
+                
+                if (!isScrollPhysicsActive && bentoContainer) {
+                    isScrollPhysicsActive = true;
+                    requestAnimationFrame(renderScrollPhysics);
+                }
+            }, { passive: true }); // Passive listener removes scroll blocking
+
+            function renderScrollPhysics() {
+                currentSkew += (targetSkew - currentSkew) * 0.1;
+                targetSkew *= 0.9; // Decay the target so it settles
+                
+                if (bentoContainer) {
+                    bentoContainer.style.transform = `skewY(${currentSkew}deg)`;
+                }
+                
+                // Sleep the animation if movement is tiny to save CPU
+                if (Math.abs(currentSkew) > 0.01 || Math.abs(targetSkew) > 0.01) {
+                    requestAnimationFrame(renderScrollPhysics);
+                } else {
+                    isScrollPhysicsActive = false;
+                    if (bentoContainer) bentoContainer.style.transform = `skewY(0deg)`;
+                }
+            }
         }
 
-        // EXPERIMENT 3: Marketing Funnel Scroll Progress
-        window.addEventListener('scroll', () => {
-            const funnelProgress = document.getElementById('funnel-progress');
-            if(funnelProgress) {
-                // Calculate how far down the user has scrolled as a percentage
-                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-                const scrollPercent = (scrollTop / scrollHeight) * 100;
-                
-                funnelProgress.style.height = `${scrollPercent}%`;
+        // --- GLOBAL SCRIPTS & UTILS ---
+
+        // Secret Keystroke (HIRE)
+        let keysPressed = [];
+        const secretCode = ['h', 'i', 'r', 'e'];
+        window.addEventListener('keydown', (e) => {
+            keysPressed.push(e.key.toLowerCase());
+            keysPressed = keysPressed.slice(-4);
+            if (JSON.stringify(keysPressed) === JSON.stringify(secretCode)) {
+                const btn = document.getElementById('whatsapp-btn');
+                if(btn) {
+                    for(let i=0; i<8; i++) {
+                        setTimeout(() => { btn.click(); }, i * 150);
+                    }
+                }
+                setTimeout(() => {
+                    alert('🚩 EASTER EGG UNLOCKED 🚩\n\nYou typed H-I-R-E! Clearly, this is a sign. Slide into my inbox and let\'s get that offer letter drafted! 🎉');
+                }, 500);
             }
         });
 
-        // 2. Live Time Widget (IST)
+        // WhatsApp Particle Explosion
+        const whatsappBtn = document.getElementById('whatsapp-btn');
+        if(whatsappBtn) {
+            whatsappBtn.addEventListener('click', (e) => {
+                const rect = whatsappBtn.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const colors = ['#0D9488', '#FF715B', '#14B8A6', '#FFFFFF'];
+                
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    const size = Math.random() * 8 + 4;
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100 + 50;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = `${centerX}px`;
+                    particle.style.top = `${centerY}px`;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
+                }
+            });
+        }
+
+        // Optimized Funnel Progress
+        window.addEventListener('scroll', () => {
+            const funnelProgress = document.getElementById('funnel-progress');
+            if(funnelProgress) {
+                // Use requestAnimationFrame to prevent scroll jank
+                requestAnimationFrame(() => {
+                    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrollPercent = (scrollTop / scrollHeight) * 100;
+                    funnelProgress.style.height = `${scrollPercent}%`;
+                });
+            }
+        }, { passive: true });
+
+        // Time Widget
         function updateLiveTime() {
             const timeElement = document.getElementById('live-time');
             if(timeElement) {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute:'2-digit' });
-                timeElement.textContent = timeString + " IST";
+                timeElement.textContent = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute:'2-digit' }) + " IST";
             }
         }
         setInterval(updateLiveTime, 1000);
         updateLiveTime();
 
-        // 3. Smooth Copy to Clipboard UX
+        // Copy Email Button
         const copyBtn = document.getElementById('copy-email-btn');
         if(copyBtn) {
             copyBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const emailToCopy = "ansh12042005@gmail.com"; 
                 
-                // Canvas/iframe safe copy method
                 const textArea = document.createElement("textarea");
                 textArea.value = emailToCopy;
                 document.body.appendChild(textArea);
@@ -1258,9 +1427,7 @@
                 document.execCommand("copy");
                 textArea.remove();
 
-                // UI Feedback transition
                 const icon = document.getElementById('email-icon');
-                // Target both Gen Z and Corp text spans inside the button
                 const textGenz = document.getElementById('email-text');
                 const textCorp = document.getElementById('email-text-corp');
                 const originalClass = icon.className;
@@ -1273,7 +1440,6 @@
                 copyBtn.classList.replace('text-white', 'text-brand-dark');
                 copyBtn.classList.add('border', 'border-brand-primary', 'shadow-brand-primary/20');
                 
-                // Revert after 2 seconds
                 setTimeout(() => {
                     icon.className = originalClass;
                     if(textGenz) textGenz.textContent = "Slide into my inbox";
